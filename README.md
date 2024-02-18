@@ -6,7 +6,7 @@ I hacked this together when https://kill-feed.tk/ stopped working.  If you like 
 
 To use the tool:
 
-1) Download and place this HTML file in a folder on your computer. You will need the know the exact file path of the file to enter into OBS.  On windows 11 you can right click on the file and select "copy as path".  The path will be something like: C:\Users\nerd\Downloads\killfeed\pastekillfeed.html depending on where you put the file.  It does not matter where you put the file so as long as you can let OBS know the path.
+1) Download and place this HTML file in a folder on your computer. Rename it to pastekillfeed.html.  You will need the know the exact file path of the file to enter into OBS.  On windows 11 you can right click on the file and select "copy as path".  The path will be something like: C:\Users\nerd\Downloads\killfeed\pastekillfeed.html depending on where you put the file.  It does not matter where you put the file so as long as you can let OBS know the path.
 
 2) In OBS, go into your Sources window and add a "Browser" source to your stream.  Name the source something like "pastekillfeed"
 
