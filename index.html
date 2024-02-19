@@ -38,7 +38,7 @@
         // Handle login
         document.getElementById('login').addEventListener('click', async () => {
             await auth0.loginWithRedirect({
-                connection: killfeed1socialconnection
+                connection: 'killfeed1socialconnection'
             });
         });
 
