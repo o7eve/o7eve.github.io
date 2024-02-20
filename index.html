@@ -28,21 +28,17 @@
             window.location.href = `https://login.eveonline.com/v2/oauth/authorize?response_type=code&redirect_uri=https://o7eve.github.io/callback&client_id=8becdadbea7d46adabbcf20af467fac8&scope=esi-killmails.read_killmails.v1&state=${state}`;
         });
 
-        // In your callback route, verify the state parameter
-        const params = new URLSearchParams(window.location.search);
-        const returnedState = params.get('state');
-        const storedState = sessionStorage.getItem('oauthState');
-        if (returnedState !== storedState) {
-            console.error('State parameter mismatch');
-            // Handle the error
-        } else {
-            // Proceed with the token exchange
-        }
-
-        // Check if the page was loaded with an authorization code
+        // Check if the page was loaded with an authorization code or state parameter
         const params = new URLSearchParams(window.location.search);
         const code = params.get('code');
-        if (code) {
+        const returnedState = params.get('state');
+        const storedState = sessionStorage.getItem('oauthState');
+
+        if (returnedState && returnedState !== storedState) {
+            console.error('State parameter mismatch');
+            // Handle the error
+        } else if (code) {
+            // Proceed with the token exchange
             // Send the authorization code to the Netlify Function
             fetch('/.netlify/functions/eve-sso', {
                 method: 'POST',
@@ -105,4 +101,5 @@
     </script>
 </body>
 </html>
+
 
