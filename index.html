@@ -20,86 +20,37 @@
 
     <script>
        document.getElementById('login').addEventListener('click', function() {
-            // Generate a unique state value
             const state = Math.random().toString(36).substring(2);
-            // Store the state value for later verification
             sessionStorage.setItem('oauthState', state);
-            // Redirect to EVE Online SSO authorization URL with the state parameter
-            window.location.href = `https://login.eveonline.com/v2/oauth/authorize?response_type=code&redirect_uri=https://friendly-puppy-d4bfa8.netlify.app/callback&client_id=8becdadbea7d46adabbcf20af467fac8&scope=esi-killmails.read_killmails.v1&state=${state}`;
+            window.location.href = `https://login.eveonline.com/v2/oauth/authorize?response_type=code&redirect_uri=https://friendly-puppy-d4bfa8.netlify.app/callback&client_id=8becdadbea7d46adabbcf20af467fac8&=scope=esi-killmails.read_killmails.v1&state=${state}`;
         });
 
-        // Check if the page was loaded with an authorization code or state parameter
-        const params = new URLSearchParams(window.location.search);
-        const code = params.get('code');
-        const returnedState = params.get('state');
-        const storedState = sessionStorage.getItem('oauthState');
+        async function handleAuthResponse() {
+            const params = new URLSearchParams(window.location.search);
+            const code = params.get('code');
+            const returnedState = params.get('state');
+            const storedState = sessionStorage.getItem('oauthState');
 
-        if (returnedState && returnedState !== storedState) {
-            console.error('State parameter mismatch');
-            // Handle the error
-        } else if (code) {
-            // Proceed with the token exchange
-            // Send the authorization code to the Netlify Function
-            fetch('/.netlify/functions/eve-sso', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ code }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                // Use the access token to fetch the character's killmails
-                fetchKillmails(data.accessToken);
-            })
-            .catch(error => {
-                console.error('Error exchanging authorization code:', error);
-            });
+            if (code && returnedState === storedState) {
+                try {
+                    const response = await fetch('/.netlify/functions/eve-sso', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ code })
+                    });
+                    const data = await response.json();
+                    fetchKillmails(data.accessToken);
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            }
         }
 
         async function fetchKillmails(accessToken) {
-            // Fetch the character ID from the EVE Online API using the access token
-            const characterResponse = await fetch('https://esi.evetech.net/verify/', {
-                headers: {
-                    'Authorization': 'Bearer ' + accessToken
-                }
-            });
-            const characterData = await characterResponse.json();
-            const characterId = characterData.CharacterID;
-
-            // Fetch the last 10 killmails for the character
-            const killmailsResponse = await fetch(`https://esi.evetech.net/latest/characters/${characterId}/killmails/recent/?datasource=tranquility&limit=10`, {
-                headers: {
-                    'Authorization': 'Bearer ' + accessToken
-                }
-            });
-            const killmails = await killmailsResponse.json();
-
-            // Display the killmails
-            const killsContainer = document.getElementById('killsContainer');
-            killsContainer.innerHTML = '';
-            for (const killmail of killmails) {
-                const killElement = document.createElement('div');
-                killElement.className = 'kill';
-                killElement.innerHTML = `
-                    <img src="https://images.evetech.net/types/${killmail.victim.ship_type_id}/icon" alt="Ship Icon">
-                    <span>${formatValue(killmail.value)}</span>
-                `;
-                killsContainer.appendChild(killElement);
-            }
+            // Your existing fetchKillmails logic
         }
 
-        function formatValue(value) {
-            if (value >= 1000000000) {
-                return (value / 1000000000).toFixed(1) + 'B';
-            } else if (value >= 1000000) {
-                return (value / 1000000).toFixed(1) + 'M';
-            } else {
-                return (value / 1000).toFixed(1) + 'K';
-            }
-        }
+        document.addEventListener('DOMContentLoaded', handleAuthResponse);
     </script>
 </body>
 </html>
-
-
