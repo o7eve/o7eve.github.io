@@ -1,8 +1,7 @@
-Code
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Killmails Display</title>
+    <title>Killmails Display with EVE Online SSO</title>
     <style>
         body {
             background-color: black;
@@ -18,84 +17,74 @@ Code
             display: block;
             margin-bottom: 5px;
         }
-        #killmailLinks {
-            display: block;
-            width: 100ch;
-            height: 12em;
-            margin-top: 120px;
+        #login {
+            background: none;
+            border: none;
         }
-        .instructions {
-            margin-top: 10px;
-            color: #ccc;
+        #login img {
+            width: auto;
+            height: 30px;
         }
     </style>
-    <script src="https://cdn.auth0.com/js/auth0-spa-js/1.13/auth0-spa-js.production.js"></script>
 </head>
 <body>
-    <div id="loginContainer" style="margin-bottom: 20px;">
-        <button id="login-button" onclick="login()">Log In</button>
-        <button id="logout-button" onclick="logout()" style="display: none;">Log Out</button>
-    </div>
+    <button id="login">
+        <img src="https://web.ccpgamescdn.com/eveonlineassets/developers/eve-sso-login-white-small.png" alt="Log in with EVE Online">
+    </button>
     <div id="killsContainer"></div>
-    <textarea id="killmailLinks" placeholder="Paste External Kill Links here. Up to 10 max.  To find your external kill link, open a killmail in eve, click the three little dots in the upper right, and select Copy External Kill Link."></textarea>
-    <button onclick="fetchKillmails()">Submit</button>
-    <div class="instructions">Paste external kill links in the box, up to 10. I create this tool to display kills on my OBS display when streaming eve online.  <a href="https://github.com/o7eve/o7eve.github.io/blob/main/index.html" style="color: #8ebf42"> Github link for instructions and file download</a></div>
 
+    <script src="https://cdn.auth0.com/js/auth0-spa-js/1.13/auth0-spa-js.production.js"></script>
     <script>
-        let auth0Client = null;
+        // Initialize Auth0 client
+        const auth0 = new Auth0Client({
+            domain: 'dev-1yura1lcjrsavb5f.us.auth0.com',
+            client_id: 'T0ffaMFBPS1kiCCE7avRV2P81tdmwhGf',
+            redirect_uri: 'https://o7eve.github.io/',
+            audience: 'https://esi.evetech.net'
+        });
 
-        async function initializeAuthentication() {
-            auth0Client = await createAuth0Client({
-                domain: 'dev-1yura1lcjrsavb5f.us.auth0.com', // Replace with your Auth0 domain
-                client_id: 'T0ffaMFBPS1kiCCE7avRV2P81tdmwhGf', // Replace with your Auth0 Client ID
-                redirect_uri: 'https://o7eve.github.io/'
+        // Handle login
+        document.getElementById('login').addEventListener('click', async () => {
+            await auth0.loginWithRedirect({
+                connection: 'killfeed1socialconnection',
+                scope: 'esi-killmails.read_killmails.v1'
             });
+        });
 
-            if (window.location.search.includes("code=") && window.location.search.includes("state=")) {
-                try {
-                    await auth0Client.handleRedirectCallback();
-                    window.history.replaceState({}, document.title, window.location.pathname);
-                } catch (err) {
-                    console.error("Error handling the redirect callback:", err);
-                }
+        // Handle authentication response
+        window.onload = async () => {
+            if (await auth0.isAuthenticated()) {
+                const accessToken = await auth0.getTokenSilently();
+                fetchKillmails(accessToken);
+            } else if (window.location.search.includes('code=')) {
+                await auth0.handleRedirectCallback();
+                window.history.replaceState({}, document.title, '/');
             }
-
-            updateUI();
-        }
-
-        async function updateUI() {
-            const isAuthenticated = await auth0Client.isAuthenticated();
-
-            document.getElementById('login-button').style.display = isAuthenticated ? 'none' : 'block';
-            document.getElementById('logout-button').style.display = isAuthenticated ? 'block' : 'none';
-            document.getElementById('killmailLinks').style.display = isAuthenticated ? 'block' : 'none';
-
-            if (isAuthenticated) {
-                console.log("User is authenticated");
-            } else {
-                console.log("User is not authenticated");
-            }
-        }
-
-        function login() {
-            auth0Client.loginWithRedirect();
-        }
-
-        function logout() {
-            auth0Client.logout({
-                returnTo: 'https://o7eve.github.io/'
-            });
-        }
-
-        window.onload = () => {
-            initializeAuthentication();
         };
 
-        let marketPrices = {};
+        // Fetch and display killmails
+        async function fetchKillmails(accessToken) {
+            const killsContainer = document.getElementById('killsContainer');
+            killsContainer.innerHTML = '';
 
-        // Your existing fetchMarketPrices and fetchKillmails functions go here
+            // Fetch last 10 kills for the character (you need to implement this)
+            const killmails = await getLast10Killmails(accessToken);
 
-        fetchMarketPrices();
+            // Display killmails (similar to previous implementation)
+            for (const killmail of killmails) {
+                const killElement = document.createElement('div');
+                killElement.className = 'kill';
+                killElement.innerHTML = `
+                    <img src="https://images.evetech.net/types/${killmail.shipTypeId}/icon" alt="Ship Icon">
+                    <span>${formatValue(killmail.value)}</span>
+                `;
+                killsContainer.appendChild(killElement);
+            }
+        }
+
+        function formatValue(value) {
+            // Format the value in millions or billions (similar to previous implementation)
+        }
     </script>
 </body>
 </html>
