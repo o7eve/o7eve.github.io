@@ -25,7 +25,7 @@
             // Store the state value for later verification
             sessionStorage.setItem('oauthState', state);
             // Redirect to EVE Online SSO authorization URL with the state parameter
-            window.location.href = `https://login.eveonline.com/v2/oauth/authorize?response_type=code&redirect_uri=https://o7eve.github.io/callback&client_id=8becdadbea7d46adabbcf20af467fac8&scope=esi-killmails.read_killmails.v1&state=${state}`;
+            window.location.href = `https://login.eveonline.com/v2/oauth/authorize?response_type=code&redirect_uri=https://friendly-puppy-d4bfa8.netlify.app/callback&client_id=8becdadbea7d46adabbcf20af467fac8&scope=esi-killmails.read_killmails.v1&state=${state}`;
         });
 
         // Check if the page was loaded with an authorization code or state parameter
