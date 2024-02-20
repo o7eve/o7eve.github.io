@@ -19,10 +19,25 @@
     <div id="killsContainer"></div>
 
     <script>
-        document.getElementById('login').addEventListener('click', function() {
-            // Redirect to EVE Online SSO authorization URL
-            window.location.href = 'https://login.eveonline.com/v2/oauth/authorize?response_type=code&redirect_uri=https://o7eve.github.io/&client_id=8becdadbea7d46adabbcf20af467fac8&scope=esi-killmails.read_killmails.v1';
+       document.getElementById('login').addEventListener('click', function() {
+            // Generate a unique state value
+            const state = Math.random().toString(36).substring(2);
+            // Store the state value for later verification
+            sessionStorage.setItem('oauthState', state);
+            // Redirect to EVE Online SSO authorization URL with the state parameter
+            window.location.href = `https://login.eveonline.com/v2/oauth/authorize?response_type=code&redirect_uri=https://o7eve.github.io/callback&client_id=8becdadbea7d46adabbcf20af467fac8&scope=esi-killmails.read_killmails.v1&state=${state}`;
         });
+
+        // In your callback route, verify the state parameter
+        const params = new URLSearchParams(window.location.search);
+        const returnedState = params.get('state');
+        const storedState = sessionStorage.getItem('oauthState');
+        if (returnedState !== storedState) {
+            console.error('State parameter mismatch');
+            // Handle the error
+        } else {
+            // Proceed with the token exchange
+        }
 
         // Check if the page was loaded with an authorization code
         const params = new URLSearchParams(window.location.search);
