@@ -38,7 +38,7 @@
         // Initialize Auth0 client
         const auth0 = new Auth0Client({
             domain: 'dev-1yura1lcjrsavb5f.us.auth0.com',
-            client_id: 'T0ffaMFBPS1kiCCE7avRV2P81tdmwhGf',
+            client_id: 'Vsxotf2mTJ5Nx1sra4vYQueHQhMNt6vk',
             redirect_uri: 'https://o7eve.github.io/',
             audience: 'https://esi.evetech.net'
         });
@@ -46,7 +46,7 @@
         // Handle login
         document.getElementById('login').addEventListener('click', async () => {
             await auth0.loginWithRedirect({
-                connection: 'killfeed1socialconnection',
+                connection: 'EVEOnlineSSO',
                 scope: 'esi-killmails.read_killmails.v1'
             });
         });
