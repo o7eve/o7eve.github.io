@@ -48,7 +48,7 @@ Code
             auth0Client = await createAuth0Client({
                 domain: 'dev-1yura1lcjrsavb5f.us.auth0.com', // Replace with your Auth0 domain
                 client_id: 'T0ffaMFBPS1kiCCE7avRV2P81tdmwhGf', // Replace with your Auth0 Client ID
-                redirect_uri: window.location.origin + window.location.pathname
+                redirect_uri: 'https://o7eve.github.io/index.html'
             });
 
             if (window.location.search.includes("code=") && window.location.search.includes("state=")) {
