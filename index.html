@@ -21,75 +21,54 @@
     <div id="killsContainer"></div>
 
     <script>
-        function generateState() {
-            return Math.random().toString(36).substring(2);
-        }
+   async function fetchClientId() {
+    try {
+        const response = await fetch('https://friendly-puppy-d4bfa8.netlify.app/.netlify/functions/get-client-id');
+        const data = await response.json();
+        return data.clientId;
+    } catch (error) {
+        console.error('Error fetching client ID:', error);
+        return null;
+    }
+   }
 
-        document.getElementById('login').addEventListener('click', function() {
-            const state = generateState();
+        document.getElementById('login').addEventListener('click', async function() {
+            const clientId = await fetchClientId();
+            if (!clientId) {
+                alert('Error fetching client details. Please try again later.');
+                return;
+            }
+
+            const state = Math.random().toString(36).substring(2);
             sessionStorage.setItem('oauthState', state);
             const redirectUri = encodeURIComponent('https://friendly-puppy-d4bfa8.netlify.app/callback');
             const scope = encodeURIComponent('esi-killmails.read_killmails.v1');
-            window.location.href = `https://login.eveonline.com/v2/oauth/authorize?response_type=code&redirect_uri=${redirectUri}&client_id=your_client_id&scope=${scope}&state=${state}`;
+            window.location.href = `https://login.eveonline.com/v2/oauth/authorize?response_type=code&redirect_uri=${redirectUri}&client_id=${clientId}&scope=${scope}&state=${state}`;
         });
 
         async function handleAuthResponse() {
             const params = new URLSearchParams(window.location.search);
             const code = params.get('code');
             const returnedState = params.get('state');
-
-            if (!code || !returnedState) {
-                console.log('No code or state in URL, skipping authentication response handling.');
-                return;
-            }
-
             const storedState = sessionStorage.getItem('oauthState');
-            if (storedState !== returnedState) {
-                console.error('State mismatch');
-                return;
-            }
 
-            try {
-                const response = await fetch('/.netlify/functions/eve-sso', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ code })
-                });
-                const data = await response.json();
-                sessionStorage.setItem('accessToken', data.accessToken);
-                fetchKillmails(data.accessToken);
-            } catch (error) {
-                console.error('Error:', error);
+            if (code && returnedState === storedState) {
+                try {
+                    const response = await fetch('/.netlify/functions/eve-sso', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ code })
+                    });
+                    const data = await response.json();
+                    fetchKillmails(data.accessToken);
+                } catch (error) {
+                    console.error('Error:', error);
+                }
             }
-
-            // Clear the state after successful authentication
-            sessionStorage.removeItem('oauthState');
         }
 
         async function fetchKillmails(accessToken) {
-            console.log('Using Access Token:', accessToken);
-            try {
-                const response = await fetch(`https://esi.evetech.net/latest/characters/2117504100/killmails/recent/?datasource=tranquility&page=1`, {
-                    headers: { 'Authorization': `Bearer ${accessToken}` }
-                });
-                const killmails = await response.json();
-                console.log('Killmails:', killmails);
-                displayKillmails(killmails);
-            } catch (error) {
-                console.error('Error fetching killmails:', error);
-            }
-        }
-
-        function displayKillmails(killmails) {
-            console.log('Displaying killmails:', killmails);
-            const container = document.getElementById('killsContainer');
-            container.innerHTML = ''; // Clear any existing content
-            killmails.forEach(killmail => {
-                const killmailElement = document.createElement('div');
-                killmailElement.className = 'kill';
-                killmailElement.textContent = JSON.stringify(killmail, null, 2); // Format the JSON for display
-                container.appendChild(killmailElement);
-            });
+            // Your existing fetchKillmails logic here
         }
 
         document.addEventListener('DOMContentLoaded', handleAuthResponse);
