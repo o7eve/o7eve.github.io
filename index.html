@@ -41,7 +41,9 @@ document.getElementById('login').addEventListener('click', async function() {
 
     const state = Math.random().toString(36).substring(2);
     console.log('Setting Stored State:', state); // Log the state value being set
+    console.log('Before setting Stored State:', sessionStorage.getItem('oauthState'));
     sessionStorage.setItem('oauthState', state);
+    console.log('After setting Stored State:', sessionStorage.getItem('oauthState'));
     const redirectUri = encodeURIComponent('https://friendly-puppy-d4bfa8.netlify.app/callback');
     const scope = encodeURIComponent('esi-killmails.read_killmails.v1');
     window.location.href = `https://login.eveonline.com/v2/oauth/authorize?response_type=code&redirect_uri=${redirectUri}&client_id=${clientId}&scope=${scope}&state=${state}`;
