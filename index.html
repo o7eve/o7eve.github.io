@@ -47,7 +47,7 @@
         }
 
         function fetchKillmails(accessToken) {
-            fetch('https://esi.evetech.net/latest/characters/2117504100/killmails/recent/', {
+            fetch('https://esi.evetech.net/latest/characters/2117504100/killmails/recent/?datasource=tranquility&page=1', {
                 headers: {
                     'Authorization': 'Bearer ' + accessToken
                 }
