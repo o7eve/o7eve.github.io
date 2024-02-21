@@ -84,7 +84,16 @@ async function fetchKillmails(accessToken, characterId) {
         console.error('Error fetching killmails:', error);
     }
 }
-
+function displayKillmails(killmails) {
+    const container = document.getElementById('killsContainer');
+    container.innerHTML = ''; // Clear any existing content
+    killmails.forEach(killmail => {
+        const killmailElement = document.createElement('div');
+        killmailElement.className = 'kill';
+        killmailElement.textContent = JSON.stringify(killmail, null, 2); // Format the JSON for display
+        container.appendChild(killmailElement);
+    });
+}
         document.addEventListener('DOMContentLoaded', handleAuthResponse);
     </script>
 </body>
