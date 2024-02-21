@@ -61,16 +61,21 @@
         });
 
 async function handleAuthResponse() {
+    const storedState = sessionStorage.getItem('oauthState');
+    console.log('Stored State:', storedState); // Log the stored state
+
     const params = new URLSearchParams(window.location.search);
     const code = params.get('code');
-    const storedState = sessionStorage.getItem('oauthState');
     const returnedState = params.get('state');
-
     console.log('Returned State:', returnedState);
-    console.log('Stored State:', storedState);
 
-    if (!code || returnedState !== storedState) {
-        console.error('State mismatch or missing code');
+    if (!code || !returnedState) {
+        console.error('Missing code or stategrr');
+        return;
+    }
+
+    if (storedState !== returnedState) {
+        console.error('State mismatch');
         return;
     }
 
@@ -87,6 +92,9 @@ async function handleAuthResponse() {
     } catch (error) {
         console.error('Error:', error);
     }
+
+    // Clear the state after successful authentication
+    sessionStorage.removeItem('oauthState');
 }
 
 
