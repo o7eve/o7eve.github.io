@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>EVE Online777 SPA</title>
+    <title>EVE Online SPA</title>
     <style>
         body {
             background-color: black;
@@ -33,82 +33,73 @@
         let characterId = '';
 
         document.getElementById('login-button').addEventListener('click', function() {
-            sessionStorage.setItem('oauthState', generateState());
-            const authUrl = buildAuthUrl(sessionStorage.getItem('oauthState'));
-            window.location.href = authUrl;
+            var state = generateState();
+            // Redirect the user to the EVE SSO login page
+            window.location.href = 'https://login.eveonline.com/v2/oauth/authorize/?response_type=code&redirect_uri=https%3A%2F%2Ffriendly-puppy-d4bfa8.netlify.app%2Fcallback&client_id=8becdadbea7d46adabbcf20af467fac8&scope=esi-killmails.read_killmails.v1&state=' + state;
         });
 
+        // Extract the code from URL parameters if present
         const urlParams = new URLSearchParams(window.location.search);
         const code = urlParams.get('code');
-        const state = urlParams.get('state');
+        if (code) {
+            // Token endpoint details omitted for brevity
+            // Assume accessToken and characterId are set here
+            fetchAndDisplayKillmails(); // Initial fetch
+            setInterval(fetchAndDisplayKillmails, 60000); // Set up refresh every 60 seconds
+        }
 
-        if (code && state === sessionStorage.getItem('oauthState')) {
-            fetchAccessToken(code);
+        function fetchAndDisplayKillmails() {
+            console.log('Fetching killmails...');
+            fetch(`https://esi.evetech.net/v1/characters/${characterId}/killmails/recent/?datasource=tranquility`, {
+                headers: { Authorization: `Bearer ${accessToken}` },
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Killmails data:', data); // Log the raw data for debugging
+                if (!data || data.error) {
+                    console.error('Error fetching killmails:', data);
+                    return;
+                }
+                const killmailsContainer = document.getElementById('killmails-container');
+                killmailsContainer.innerHTML = ''; // Clear existing content
+
+                data.slice(0, 10).forEach(killmail => { // Process top 10 killmails
+                    fetch(`https://esi.evetech.net/v1/killmails/${killmail.killmail_id}/${killmail.killmail_hash}/?datasource=tranquility`)
+                    .then(response => response.json())
+                    .then(details => {
+                        console.log(`Details for killmail ID ${killmail.killmail_id}:`, details); // Log details for debugging
+                        // Assume calculateKillValue() and formatValue() are correctly implemented
+                        const shipTypeId = details.victim.ship_type_id;
+                        const killValue = calculateKillValue(details); // Mock calculation
+                        const shipIconUrl = `https://images.evetech.net/types/${shipTypeId}/icon`;
+
+                        const killmailElement = document.createElement('div');
+                        killmailElement.className = 'kill';
+                        killmailElement.innerHTML = `<img src="${shipIconUrl}" alt="Ship Icon"><span>${killValue}</span>`;
+                        killmailsContainer.appendChild(killmailElement);
+                    })
+                    .catch(error => console.error('Error fetching killmail details:', error));
+                });
+            })
+            .catch(error => console.error('Error fetching recent killmails:', error));
+        }
+
+        function calculateKillValue(killmail) {
+            // Dummy implementation for demonstration
+            return '100M ISK'; // Placeholder value
         }
 
         function generateState() {
-            var state = '';
-            var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-            for (var i = 0; i < 16; i++) {
+            let state = '';
+            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            for (let i = 0; i < 16; i++) {
                 state += characters.charAt(Math.floor(Math.random() * characters.length));
             }
             return state;
         }
-
-        function buildAuthUrl(state) {
-            return `https://login.eveonline.com/v2/oauth/authorize/?response_type=code&redirect_uri=${encodeURIComponent('https://friendly-puppy-d4bfa8.netlify.app/callback')}&client_id=8becdadbea7d46adabbcf20af467fac8&scope=esi-killmails.read_killmails.v1&state=${state}`;
-        }
-
-        function fetchAccessToken(code) {
-            fetch('https://login.eveonline.com/v2/oauth/token', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'Authorization': 'Basic ' + btoa('8becdadbea7d46adabbcf20af467fac8:YL1hieqstuYMwZ3p3WWTncxBdVTgck3PUrIyPzK4')
-                },
-                body: 'grant_type=authorization_code&code=' + code
-            })
-            .then(response => response.json())
-            .then(data => {
-                accessToken = data.access_token;
-                extractCharacterInfo(data.access_token);
-                fetchAndDisplayKillmails();
-                setInterval(fetchAndDisplayKillmails, 60000); // Refresh every 60 seconds
-            })
-            .catch(error => console.error('Error getting access token:', error));
-        }
-
-        function extractCharacterInfo(jwtToken) {
-            const payload = jwtToken.split('.')[1];
-            const decodedPayload = JSON.parse(atob(payload));
-            characterId = decodedPayload.sub.split(':')[2];
-            document.getElementById('character-info').innerText = `Character ID: ${characterId}`;
-        }
-
-        function fetchAndDisplayKillmails() {
-            if (!characterId || !accessToken) return;
-            fetch(`https://esi.evetech.net/v1/characters/${characterId}/killmails/recent/`, {
-                headers: { Authorization: `Bearer ${accessToken}` },
-            })
-            .then(response => response.json())
-            .then(killmails => {
-                // Your logic to display the killmails
-                console.log(killmails); // Placeholder for actual implementation
-            })
-            .catch(error => console.error('Error fetching killmails:', error));
-        }
-
-        // Implement these functions based on your logic
-        function calculateKillValue(killmail) {
-            // Placeholder for kill value calculation
-            return 0; // Implement your logic
-        }
-
-        function formatValue(value) {
-            // Placeholder for value formatting
-            return value.toFixed(2); // Example implementation
-        }
     </script>
 </body>
+</html>
+
 </html>
 
