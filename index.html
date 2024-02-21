@@ -36,7 +36,7 @@
         document.getElementById('login').addEventListener('click', async function() {
             const state = Math.random().toString(36).substring(2);
             console.log('Setting State:', state); // Log the state value being set
-            sessionStorage.setItem('oauthState', state);
+            localStorage.setItem('oauthState', state);
 
             const clientId = await fetchClientId();
             if (!clientId) {
@@ -50,7 +50,7 @@
         });
 
         async function handleAuthResponse() {
-            const storedState = sessionStorage.getItem('oauthState');
+            const storedState = localStorage.getItem('oauthState');
             console.log('Stored State:', storedState); // Log the stored state
 
             const params = new URLSearchParams(window.location.search);
@@ -62,7 +62,7 @@
                 console.log('No stored state found. Setting a new state.');
                 const newState = Math.random().toString(36).substring(2);
                 console.log('Setting Stored State:', newState);
-                sessionStorage.setItem('oauthState', newState);
+                localStorage.setItem('oauthState', newState);
                 return;
             }
 
@@ -84,7 +84,7 @@
                 console.error('State mismatch or missing code');
             }
 
-            const storedStateAfter = sessionStorage.getItem('oauthState');
+            const storedStateAfter = localStorage.getItem('oauthState');
             console.log('Stored State After:', storedStateAfter);
         }
 
