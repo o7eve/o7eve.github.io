@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>EVE Onlinessssc  SPA</title>
+    <title>EVE Online DDD SPA</title>
     <style>
         body {
             background-color: black;
@@ -27,9 +27,11 @@
     <div id="killmails-container"></div>
     <div id="countdown-timer">Refreshing in 60 seconds...</div>
     <div id="character-info"></div>
+
     <script>
         let accessToken = '';
         let refreshToken = '';
+        let characterId = '';
 
         function generateState() {
             var state = '';
@@ -63,8 +65,7 @@
             .then(data => {
                 accessToken = data.access_token;
                 refreshToken = data.refresh_token;
-                const jwtToken = parseJwt(data.id_token);
-                extractCharacterInfo(jwtToken);
+                extractCharacterInfo(data.access_token); // Extract character info
                 fetchAndDisplayKillmails();
                 setInterval(fetchAndDisplayKillmails, 60000); // Refresh every 60 seconds
             })
@@ -73,20 +74,13 @@
             });
         }
 
-        function parseJwt(token) {
-            const base64Url = token.split('.')[1];
-            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
-                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-            }).join(''));
-
-            return JSON.parse(jsonPayload);
-        }
-
         function extractCharacterInfo(jwtToken) {
-            const characterName = jwtToken.name;
-            const characterId = jwtToken.sub.split(':')[2];
+            const [header, payload, signature] = jwtToken.split('.');
+            const decodedPayload = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+            const characterName = decodedPayload.name;
+            characterId = decodedPayload.sub.split(':')[2]; // Assuming the format is "CHARACTER:EVE:<character_id>"
 
+            // Update the HTML content with the character name and ID
             const characterInfoContainer = document.getElementById('character-info');
             characterInfoContainer.innerHTML = `Character Name: ${characterName}, Character ID: ${characterId}`;
         }
@@ -99,7 +93,7 @@
             })
             .then(response => response.json())
             .then(data => {
-                const killmails = data.sort((a, b) => new Date(b.killmail_time) - new Date(a.killmail_time)).slice(0, 10);
+                const killmails = data.sort((a, b) => new Date(b.killmail_time) - new Date(a.killmail_time)).slice(0, 10); // Sort by timestamp and get the top 10
                 const killmailsContainer = document.getElementById('killmails-container');
                 killmailsContainer.innerHTML = '';
 
@@ -107,6 +101,9 @@
                     fetch(`https://esi.evetech.net/v1/killmails/${killmail.killmail_id}/${killmail.killmail_hash}/`)
                     .then(response => response.json())
                     .then(details => {
+                        // Process the killmail details here
+                        // For each killmail, calculate the kill value, get the ship icon, and display it
+                        // Example:
                         const shipTypeId = details.victim.ship_type_id;
                         const killValue = calculateKillValue(details);
                         const shipIconUrl = `https://images.evetech.net/types/${shipTypeId}/icon`;
@@ -131,6 +128,7 @@
 
         function calculateKillValue(killmail) {
             // Implement the kill value calculation here
+            // Use the marketPrices array to get item prices
         }
 
         function formatValue(value) {
@@ -139,5 +137,4 @@
     </script>
 </body>
 </html>
-
 
