@@ -59,8 +59,10 @@ async function handleAuthResponse() {
     const returnedState = params.get('state');
     const storedState = sessionStorage.getItem('oauthState');
     console.log('Code:', code);
+    setTimeout(() => {
     console.log('Returned State:', returnedState);
     console.log('Stored State:', storedState); // Log the stored state
+           }, 1000); // 3000 milliseconds (1 second) delay
     
     if (code && returnedState === storedState) {
         try {
