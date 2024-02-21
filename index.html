@@ -61,23 +61,21 @@
         });
 
 async function handleAuthResponse() {
-    const storedState = sessionStorage.getItem('oauthState');
-    console.log('Stored State:', storedState); // Log the stored state
-
     const params = new URLSearchParams(window.location.search);
     const code = params.get('code');
     const returnedState = params.get('state');
-    console.log('Returned State:', returnedState);
 
     if (!code || !returnedState) {
-        console.error('Missing code or state333');
+        console.log('No code or state in URL, skipping authentication response handling.');
         return;
     }
 
+    const storedState = sessionStorage.getItem('oauthState');
+    console.log('Stored State:', storedState);
+    console.log('Returned State:', returnedState);
+
     if (storedState !== returnedState) {
         console.error('State mismatch');
-        console.log('Stored State:', storedState);
-        console.log('Returned State:', returnedState);
         return;
     }
 
@@ -89,7 +87,6 @@ async function handleAuthResponse() {
         });
         const data = await response.json();
         console.log('Access Token:', data.accessToken);
-        // Use the hardcoded character ID for testing
         fetchKillmails(data.accessToken, '2117504100');
     } catch (error) {
         console.error('Error:', error);
@@ -98,7 +95,6 @@ async function handleAuthResponse() {
     // Clear the state after successful authentication
     sessionStorage.removeItem('oauthState');
 }
-
 
         async function fetchKillmails(accessToken) {
             console.log('Using Access Token:', accessToken);
