@@ -23,7 +23,7 @@
     <script>
    async function fetchClientId() {
     try {
-        const response = await fetch('/.netlify/functions/get-client-id');
+        const response = await fetch('https://friendly-puppy-d4bfa8.netlify.app/.netlify/functions/get-client-id');
         const data = await response.json();
         return data.clientId;
     } catch (error) {
