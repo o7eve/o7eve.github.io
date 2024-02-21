@@ -53,6 +53,7 @@ async function handleAuthResponse() {
     const storedState = sessionStorage.getItem('oauthState');
     console.log('Code:', code);
     console.log('Returned State:', returnedState);
+    console.log('Stored State:', storedState); // Log the stored state
     
     if (code && returnedState === storedState) {
         try {
