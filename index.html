@@ -60,33 +60,35 @@
             window.location.href = `https://login.eveonline.com/v2/oauth/authorize?response_type=code&redirect_uri=${redirectUri}&client_id=${clientId}&scope=${scope}&state=${state}`;
         });
 
-        async function handleAuthResponse() {
-            const storedState = sessionStorage.getItem('oauthState');
-            console.log('Stored State:', storedState);
-            const params = new URLSearchParams(window.location.search);
-            const code = params.get('code');
-            const returnedState = params.get('state');
-            console.log('Returned State:', returnedState);
+async function handleAuthResponse() {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    const storedState = sessionStorage.getItem('oauthState');
+    const returnedState = params.get('state');
 
-            if (!code || returnedState !== storedState) {
-                console.error('State mismatch or missing code');
-                return;
-            }
+    console.log('Returned State:', returnedState);
+    console.log('Stored State:', storedState);
 
-            try {
-                const response = await fetch('https://friendly-puppy-d4bfa8.netlify.app/.netlify/functions/eve-sso', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ code })
-                });
-                const data = await response.json();
-                console.log('Access Token:', data.accessToken);
-                // Use the hardcoded character ID for testing
-                fetchKillmails(data.accessToken, '2117504100');
-            } catch (error) {
-                console.error('Error:', error);
-            }
-        }
+    if (!code || returnedState !== storedState) {
+        console.error('State mismatch or missing code');
+        return;
+    }
+
+    try {
+        const response = await fetch('https://friendly-puppy-d4bfa8.netlify.app/.netlify/functions/eve-sso', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code })
+        });
+        const data = await response.json();
+        console.log('Access Token:', data.accessToken);
+        // Use the hardcoded character ID for testing
+        fetchKillmails(data.accessToken, '2117504100');
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
 
         async function fetchKillmails(accessToken) {
             console.log('Using Access Token:', accessToken);
