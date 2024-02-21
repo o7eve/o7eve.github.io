@@ -21,6 +21,10 @@
     <div id="killsContainer"></div>
 
     <script>
+        function generateState() {
+            return Math.random().toString(36).substring(2);
+        }
+
         async function fetchClientId() {
             console.log('Fetching Client ID');
             try {
@@ -33,14 +37,18 @@
             }
         }
 
-        // Generate and store state on page load
-        const state = Math.random().toString(36).substring(2);
-        console.log('Setting State:', state);
-        sessionStorage.setItem('oauthState', state);
+        // Set state on page load
+        const storedState = sessionStorage.getItem('oauthState');
+        if (!storedState) {
+            const newState = generateState();
+            console.log('Setting State:', newState);
+            sessionStorage.setItem('oauthState', newState);
+        }
 
         document.getElementById('login').addEventListener('click', async function() {
-            const storedState = sessionStorage.getItem('oauthState');
-            console.log('Using Stored State:', storedState);
+            const state = sessionStorage.getItem('oauthState');
+            console.log('Using Stored State:', state);
+
             const clientId = await fetchClientId();
             if (!clientId) {
                 alert('Error fetching client details. Please try again later.');
@@ -49,41 +57,35 @@
 
             const redirectUri = encodeURIComponent('https://friendly-puppy-d4bfa8.netlify.app/callback');
             const scope = encodeURIComponent('esi-killmails.read_killmails.v1');
-            window.location.href = `https://login.eveonline.com/v2/oauth/authorize?response_type=code&redirect_uri=${redirectUri}&client_id=${clientId}&scope=${scope}&state=${storedState}`;
+            window.location.href = `https://login.eveonline.com/v2/oauth/authorize?response_type=code&redirect_uri=${redirectUri}&client_id=${clientId}&scope=${scope}&state=${state}`;
         });
 
         async function handleAuthResponse() {
             const storedState = sessionStorage.getItem('oauthState');
-            if (!storedState) {
-                console.error('No stored state found.');
-                return;
-            }
-
+            console.log('Stored State:', storedState);
             const params = new URLSearchParams(window.location.search);
             const code = params.get('code');
             const returnedState = params.get('state');
             console.log('Returned State:', returnedState);
-            console.log('Stored State:', storedState);
 
-            if (returnedState === storedState && code) {
-                try {
-                    const response = await fetch('https://friendly-puppy-d4bfa8.netlify.app/.netlify/functions/eve-sso', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ code })
-                    });
-                    const data = await response.json();
-                    console.log('Access Token:', data.accessToken);
-                    fetchKillmails(data.accessToken, '2117504100');
-                } catch (error) {
-                    console.error('Error:', error);
-                }
-            } else {
+            if (!code || returnedState !== storedState) {
                 console.error('State mismatch or missing code');
+                return;
             }
 
-            // Clear the state after processing
-            sessionStorage.removeItem('oauthState');
+            try {
+                const response = await fetch('https://friendly-puppy-d4bfa8.netlify.app/.netlify/functions/eve-sso', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code })
+                });
+                const data = await response.json();
+                console.log('Access Token:', data.accessToken);
+                // Use the hardcoded character ID for testing
+                fetchKillmails(data.accessToken, '2117504100');
+            } catch (error) {
+                console.error('Error:', error);
+            }
         }
 
         async function fetchKillmails(accessToken) {
@@ -103,11 +105,11 @@
         function displayKillmails(killmails) {
             console.log('Displaying killmails:', killmails);
             const container = document.getElementById('killsContainer');
-            container.innerHTML = '';
+            container.innerHTML = ''; // Clear any existing content
             killmails.forEach(killmail => {
                 const killmailElement = document.createElement('div');
                 killmailElement.className = 'kill';
-                killmailElement.textContent = JSON.stringify(killmail, null, 2);
+                killmailElement.textContent = JSON.stringify(killmail, null, 2); // Format the JSON for display
                 container.appendChild(killmailElement);
             });
         }
