@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>EVE Online ccc SPA</title>
+    <title>EVE Online ffffSPA</title>
     <style>
         body {
             background-color: black;
@@ -23,10 +23,14 @@
     <h1>EVE Online SPA</h1>
     <p>Welcome to your EVE Online single-page application!</p>
     <button id="login-button">Log in with EVE Online</button>
+
     <div id="killmails-container"></div>
     <div id="countdown-timer">Refreshing in 60 seconds...</div>
 
     <script>
+        let accessToken = '';
+        let refreshToken = '';
+
         function generateState() {
             var state = '';
             var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -42,103 +46,80 @@
             window.location.href = 'https://login.eveonline.com/v2/oauth/authorize/?response_type=code&redirect_uri=https%3A%2F%2Ffriendly-puppy-d4bfa8.netlify.app%2Fcallback&client_id=8becdadbea7d46adabbcf20af467fac8&scope=esi-killmails.read_killmails.v1&state=' + state;
         });
 
+        // Check if access token and refresh token are available in the URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+
+        if (code) {
+            fetch('https://login.eveonline.com/v2/oauth/token', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Authorization': 'Basic ' + btoa('8becdadbea7d46adabbcf20af467fac8:YL1hieqstuYMwZ3p3WWTncxBdVTgck3PUrIyPzK4')
+                },
+                body: 'grant_type=authorization_code&code=' + code
+            })
+            .then(response => response.json())
+            .then(data => {
+                accessToken = data.access_token;
+                refreshToken = data.refresh_token;
+                fetchAndDisplayKillmails();
+                setInterval(fetchAndDisplayKillmails, 60000); // Refresh every 60 seconds
+            })
+            .catch(error => {
+                console.error('Error getting access token:', error);
+            });
+        }
+
         function fetchAndDisplayKillmails() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const code = urlParams.get('code');
+            fetch('https://esi.evetech.net/v1/characters/2117504100/killmails/recent/', {
+                headers: {
+                    Authorization: 'Bearer ' + accessToken,
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                const killmails = data.reverse().slice(0, 10); // Get the last 10 killmails and reverse the order
+                const killmailsContainer = document.getElementById('killmails-container');
+                killmailsContainer.innerHTML = '';
 
-            if (code) {
-                fetch('https://login.eveonline.com/v2/oauth/token', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'Authorization': 'Basic ' + btoa('8becdadbea7d46adabbcf20af467fac8:YL1hieqstuYMwZ3p3WWTncxBdVTgck3PUrIyPzK4')
-                    },
-                    body: 'grant_type=authorization_code&code=' + code
-                })
-                .then(response => response.json())
-                .then(data => {
-                    const accessToken = data.access_token;
-                    fetch('https://esi.evetech.net/v1/characters/2117504100/killmails/recent/', {
-                        headers: {
-                            Authorization: 'Bearer ' + accessToken,
-                        },
-                    })
+                killmails.forEach(killmail => {
+                    fetch(`https://esi.evetech.net/v1/killmails/${killmail.killmail_id}/${killmail.killmail_hash}/`)
                     .then(response => response.json())
-                    .then(data => {
-                        const killmails = data.reverse().slice(0, 10);
-                        const killmailsContainer = document.getElementById('killmails-container');
-                        killmailsContainer.innerHTML = '';
+                    .then(details => {
+                        // Process the killmail details here
+                        // For each killmail, calculate the kill value, get the ship icon, and display it
+                        // Example:
+                        const shipTypeId = details.victim.ship_type_id;
+                        const killValue = calculateKillValue(details);
+                        const shipIconUrl = `https://images.evetech.net/types/${shipTypeId}/icon`;
 
-                        // Fetch details for each killmail and display ship icon and kill value
-                        killmails.forEach(killmail => {
-                            fetch(`https://esi.evetech.net/v1/killmails/${killmail.killmail_id}/${killmail.killmail_hash}/`)
-                            .then(response => response.json())
-                            .then(details => {
-                                const shipTypeId = details.victim.ship_type_id;
-                                const killValue = calculateKillValue(details);
-
-                                const killElement = document.createElement('div');
-                                killElement.className = 'kill';
-                                killElement.innerHTML = `
-                                    <img src="https://images.evetech.net/types/${shipTypeId}/icon" alt="Ship Icon">
-                                    <span>${formatValue(killValue)}</span>
-                                `;
-                                killmailsContainer.appendChild(killElement);
-                            })
-                            .catch(error => {
-                                console.error('Error:', error);
-                            });
-                        });
+                        const killElement = document.createElement('div');
+                        killElement.className = 'kill';
+                        killElement.innerHTML = `
+                            <img src="${shipIconUrl}" alt="Ship Icon">
+                            <span>${formatValue(killValue)}</span>
+                        `;
+                        killmailsContainer.appendChild(killElement);
                     })
                     .catch(error => {
-                        console.error('Error:', error);
+                        console.error('Error fetching killmail details:', error);
                     });
-                })
-                .catch(error => {
-                    console.error('Error:', error);
                 });
-            }
+            })
+            .catch(error => {
+                console.error('Error fetching recent killmails:', error);
+            });
         }
 
         function calculateKillValue(killmail) {
-            let totalValue = 0;
-
-            const shipPrice = marketPrices.find(p => p.type_id === killmail.victim.ship_type_id)?.average_price || 0;
-            totalValue += shipPrice;
-
-            for (const item of killmail.victim.items) {
-                const itemPrice = marketPrices.find(p => p.type_id === item.item_type_id)?.average_price || 0;
-                totalValue += itemPrice * (item.quantity_dropped || 0);
-                totalValue += itemPrice * (item.quantity_destroyed || 0);
-            }
-
-            return totalValue;
+            // Implement the kill value calculation here
+            // Use the marketPrices array to get item prices
         }
 
         function formatValue(value) {
-            if (value >= 1000000000) {
-                return (value / 1000000000).toFixed(1) + 'B';
-            } else if (value >= 100000000) {
-                return Math.round(value / 1000000) + 'M';
-            } else {
-                return (value / 1000000).toFixed(1) + 'M';
-            }
+            // Implement the value formatting here
         }
-
-        let marketPrices = {};
-
-        async function fetchMarketPrices() {
-            const response = await fetch('https://esi.evetech.net/latest/markets/prices/');
-            marketPrices = await response.json();
-        }
-
-        fetchMarketPrices();
-        fetchAndDisplayKillmails();
-
-        setInterval(() => {
-            fetchAndDisplayKillmails();
-        }, 60000);
-
     </script>
 </body>
 </html>
