@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>EVE Online DsssDD SPA</title>
+    <title>EVE Online Dsss5ssDD SPA</title>
     <style>
         body {
             background-color: black;
@@ -85,7 +85,7 @@
             characterInfoContainer.innerHTML = `Character Name: ${characterName}, Character ID: ${characterId}`;
         }
 
-      function fetchAndDisplayKillmails() {
+function fetchAndDisplayKillmails() {
     fetch(`https://esi.evetech.net/v1/characters/${characterId}/killmails/recent/`, {
         headers: {
             Authorization: 'Bearer ' + accessToken,
@@ -93,7 +93,17 @@
     })
     .then(response => response.json())
     .then(data => {
+        console.log('Raw data:', data);
+        if (!Array.isArray(data)) {
+            console.error('Error: Data is not an array.');
+            return;
+        }
+
         const filteredKillmails = data.filter(killmail => {
+            if (!killmail.attackers) {
+                console.error('Error: Killmail has no attackers.', killmail);
+                return false;
+            }
             return killmail.attackers.some(attacker => attacker.character_id === characterId);
         });
 
@@ -128,6 +138,7 @@
         console.error('Error fetching recent killmails:', error);
     });
 }
+
 
         function calculateKillValue(killmail) {
             // Implement the kill value calculation here
