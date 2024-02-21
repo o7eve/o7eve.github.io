@@ -1,95 +1,29 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>EVE Online SSO SPA</title>
-    <style>
-        .killmail {
-            display: inline-block;
-            margin: 10px;
-            text-align: center;
-        }
-        .killmail img {
-            width: 64px;
-            height: 64px;
-        }
-    </style>
+    <title>EVE Online SPA</title>
 </head>
 <body>
-    <button id="login">Log in with EVE Online</button>
-    <div id="killsContainer"></div>
+    <h1>EVE Online SPA</h1>
+    <p>Welcome to your EVE Online single-page application!</p>
+    <button id="login-button">Log in with EVE Online</button>
 
     <script>
-        document.getElementById('login').addEventListener('click', function() {
-              var state = Math.random().toString(36).substring(2);
-                 sessionStorage.setItem('oauthState', state);
-            // Redirect to EVE Online SSO authorization URL
-            window.location.href = 'https://login.eveonline.com/v2/oauth/authorize?response_type=code&redirect_uri=https://friendly-puppy-d4bfa8.netlify.app/callback&client_id=8becdadbea7d46adabbcf20af467fac8&scope=esi-killmails.read_killmails.v1&state=${state}';
+
+function generateState() {
+    var state = '';
+    var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    for (var i = 0; i < 16; i++) {
+        state += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    return state;
+}
+
+var state = generateState();
+        document.getElementById('login-button').addEventListener('click', function() {
+            // Redirect the user to the EVE SSO login page
+            window.location.href = 'https://login.eveonline.com/v2/oauth/authorize/?response_type=code&redirect_uri=https%3A%2F%2Ffriendly-puppy-d4bfa8.netlify.app%2Fcallback&client_id=8becdadbea7d46adabbcf20af467fac8&scope=esi-killmails.read_killmails.v1&state=' + state;
         });
-
-        // Check if the page was loaded with an authorization code
-        const params = new URLSearchParams(window.location.search);
-        const code = params.get('code');
-        const returnedState = params.get('state');
-        const storedState = sessionStorage.getItem('oauthState');
-        if (code && returnedState === storedState) {
-            // Send the authorization code to the Netlify Function
-            fetch('/.netlify/functions/eve-sso', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ code }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                                // Use the access token to make authenticated requests
-                const accessToken = data.accessToken;
-                console.log('Access Token:', accessToken);
-                // Use the access token to fetch the last 10 killmails
-                fetchKillmails(data.accessToken);
-            })
-            .catch(error => {
-                console.error('Error exchanging authorization code:', error);
-            });
-                  } else {
-            console.error('State value does not match');
-        }
-
-        function fetchKillmails(accessToken) {
-            fetch('https://esi.evetech.net/latest/characters/2117504100/killmails/recent/?datasource=tranquility&page=1', {
-                headers: {
-                    'Authorization': 'Bearer ' + accessToken
-                }
-            })
-            .then(response => response.json())
-            .then(killmails => {
-                const killsContainer = document.getElementById('killsContainer');
-                killsContainer.innerHTML = '';
-                killmails.slice(0, 10).forEach(killmail => {
-                    const killmailElement = document.createElement('div');
-                    killmailElement.className = 'killmail';
-                    killmailElement.innerHTML = `
-                        <img src="https://images.evetech.net/types/${killmail.victim.ship_type_id}/icon" alt="Ship Icon">
-                        <div>Value: ${formatValue(killmail.totalValue)} ISK</div>
-                    `;
-                    killsContainer.appendChild(killmailElement);
-                });
-            })
-            .catch(error => {
-                console.error('Error fetching killmails:', error);
-            });
-        }
-
-        function formatValue(value) {
-            if (value >= 1000000000) {
-                return (value / 1000000000).toFixed(1) + 'B';
-            } else if (value >= 1000000) {
-                return (value / 1000000).toFixed(1) + 'M';
-            } else {
-                return (value / 1000).toFixed(1) + 'K';
-            }
-        }
     </script>
 </body>
 </html>
-
