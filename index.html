@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>EVE Onlinssse SPA</title>
+    <title>EVE Online222 SPA</title>
     <style>
         body {
             background-color: black;
@@ -30,56 +30,95 @@
 
     <script>
         let accessToken = '';
-        let refreshToken = '';
         let characterId = '';
 
+        function generateState() {
+            var state = '';
+            var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            for (var i = 0; i < 16; i++) {
+                state += characters.charAt(Math.floor(Math.random() * characters.length));
+            }
+            return state;
+        }
+
+        var state = generateState();
         document.getElementById('login-button').addEventListener('click', function() {
-            // Login logic remains the same
+            window.location.href = 'https://login.eveonline.com/v2/oauth/authorize/?response_type=code&redirect_uri=https%3A%2F%2Ffriendly-puppy-d4bfa8.netlify.app%2Fcallback&client_id=8becdadbea7d46adabbcf20af467fac8&scope=esi-killmails.read_killmails.v1&state=' + state;
         });
 
-        // Token fetching and extraction logic remains the same
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+
+        if (code) {
+            fetch('https://login.eveonline.com/v2/oauth/token', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Authorization': 'Basic ' + btoa('8becdadbea7d46adabbcf20af467fac8:YL1hieqstuYMwZ3p3WWTncxBdVTgck3PUrIyPzK4')
+                },
+                body: 'grant_type=authorization_code&code=' + code
+            })
+            .then(response => response.json())
+            .then(data => {
+                accessToken = data.access_token;
+                extractCharacterInfo(data.access_token);
+                fetchAndDisplayKillmails();
+                setInterval(fetchAndDisplayKillmails, 60000);
+            })
+            .catch(error => {
+                console.error('Error getting access token:', error);
+            });
+        }
+
+        function extractCharacterInfo(jwtToken) {
+            const [header, payload, signature] = jwtToken.split('.');
+            const decodedPayload = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+            const characterName = decodedPayload.name;
+            characterId = decodedPayload.sub.split(':')[2]; 
+
+            const characterInfoContainer = document.getElementById('character-info');
+            characterInfoContainer.innerHTML = `Character Name: ${characterName}, Character ID: ${characterId}`;
+        }
 
         function fetchAndDisplayKillmails() {
-            fetch(`https://esi.evetech.net/v1/characters/${characterId}/killmails/recent/`, {
+            fetch(`https://esi.evetech.net/v1/characters/${characterId}/killmails/recent/?datasource=tranquility`, {
                 headers: {
                     Authorization: 'Bearer ' + accessToken,
                 },
             })
             .then(response => response.json())
             .then(data => {
-                // Filter and sort the killmails before displaying
-                let processedKillmails = [];
-                let promises = data.map(killmail => fetch(`https://esi.evetech.net/v1/killmails/${killmail.killmail_id}/${killmail.killmail_hash}/`)
+                const killmailsContainer = document.getElementById('killmails-container');
+                killmailsContainer.innerHTML = '';
+
+                // Filter out killmails where the character is the victim
+                const filteredKillmails = data.filter(killmail => killmail.victim.character_id !== parseInt(characterId));
+
+                // Sort filtered killmails by timestamp in descending order
+                const sortedKillmails = filteredKillmails.sort((a, b) => new Date(b.killmail_time) - new Date(a.killmail_time));
+
+                // Display only the top 10 killmails
+                const displayedKillmails = sortedKillmails.slice(0, 10);
+
+                displayedKillmails.forEach(killmail => {
+                    fetch(`https://esi.evetech.net/v1/killmails/${killmail.killmail_id}/${killmail.killmail_hash}/?datasource=tranquility`)
                     .then(response => response.json())
                     .then(details => {
-                        if (details.victim.character_id !== parseInt(characterId)) {
-                            // If the character is not the victim, add the killmail to the array
-                            return {
-                                ...details,
-                                killmail_time: killmail.killmail_time // Include the killmail time for sorting
-                            };
-                        }
-                    })
-                );
-
-                Promise.all(promises).then(results => {
-                    processedKillmails = results.filter(killmail => killmail !== undefined); // Remove undefined results (where character was the victim)
-                    processedKillmails.sort((a, b) => new Date(b.killmail_time) - new Date(a.killmail_time)); // Sort by killmail time
-
-                    const killmailsContainer = document.getElementById('killmails-container');
-                    killmailsContainer.innerHTML = '';
-
-                    processedKillmails.slice(0, 10).forEach(killmail => {
-                        const shipTypeId = killmail.victim.ship_type_id;
+                        const shipTypeId = details.victim.ship_type_id;
+                        // Example calculation for kill value, this should be replaced with your actual calculation logic
+                        const killValue = 'N/A'; // Placeholder for kill value calculation
                         const shipIconUrl = `https://images.evetech.net/types/${shipTypeId}/icon`;
 
                         const killmailElement = document.createElement('div');
                         killmailElement.className = 'kill';
                         killmailElement.innerHTML = `
                             <img src="${shipIconUrl}" alt="Ship Icon">
-                            <span>Value Placeholder</span> <!-- Adjust as necessary -->
+                            <span>${killValue}</span>
                         `;
                         killmailsContainer.appendChild(killmailElement);
+                    })
+                    .catch(error => {
+                        console.error('Error fetching killmail details:', error);
                     });
                 });
             })
@@ -88,7 +127,15 @@
             });
         }
 
-        // Remaining logic for extracting character info, calculating kill value, etc., remains the same
+        function calculateKillValue(killmail) {
+            // Placeholder for actual calculation
+            return 'Calculate kill value here';
+        }
+
+        function formatValue(value) {
+            // Placeholder for actual formatting
+            return `Formatted Value: ${value}`;
+        }
     </script>
 </body>
 </html>
