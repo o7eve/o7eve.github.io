@@ -1,13 +1,15 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>EVE Online SPA</title>
+    <title>EVE Online SPA timer </title>
 </head>
 <body>
     <h1>EVE Online SPA</h1>
     <p>Welcome to your EVE Online single-page application!</p>
     <button id="login-button">Log in with EVE Online</button>
-    <div id="killmailsContainer"></div>
+
+    <div id="killmails-container"></div>
+    <div id="countdown-timer">Refreshing in 60 seconds...</div>
 
     <script>
         function generateState() {
@@ -25,70 +27,86 @@
             window.location.href = 'https://login.eveonline.com/v2/oauth/authorize/?response_type=code&redirect_uri=https%3A%2F%2Ffriendly-puppy-d4bfa8.netlify.app%2Fcallback&client_id=8becdadbea7d46adabbcf20af467fac8&scope=esi-killmails.read_killmails.v1&state=' + state;
         });
 
-        function fetchKillmails(accessToken) {
-            fetch('https://esi.evetech.net/v1/characters/2117504100/killmails/recent/', {
-                headers: {
-                    Authorization: 'Bearer ' + accessToken,
-                },
-            })
-            .then(response => response.json())
-            .then(data => {
-                // Process the data (killmails) and display them in your SPA
-                displayKillmails(data);
-            })
-            .catch(error => {
-                // Handle any errors
-                console.error('Error:', error);
-            });
+        // Function to fetch and display killmails
+        function fetchAndDisplayKillmails() {
+            // Check if access token is available in the URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+
+            // If access token is available, make the fetch request to get the access token
+            if (code) {
+                fetch('https://login.eveonline.com/v2/oauth/token', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Authorization': 'Basic ' + btoa('8becdadbea7d46adabbcf20af467fac8:YL1hieqstuYMwZ3p3WWTncxBdVTgck3PUrIyPzK4')
+                    },
+                    body: 'grant_type=authorization_code&code=' + code
+                })
+                .then(response => response.json())
+                .then(data => {
+                    const accessToken = data.access_token;
+                    fetch('https://esi.evetech.net/v1/characters/2117504100/killmails/recent/', {
+                        headers: {
+                            Authorization: 'Bearer ' + accessToken,
+                        },
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        // Process the data (killmails)
+                        const killmails = data.reverse().slice(0, 10); // Get the last 10 killmails and reverse the order
+                        const killmailsContainer = document.getElementById('killmails-container');
+                        killmailsContainer.innerHTML = '';
+
+                        // Fetch details for each killmail
+                        killmails.forEach(killmail => {
+                            fetch(`https://esi.evetech.net/v1/killmails/${killmail.killmail_id}/${killmail.killmail_hash}/`)
+                            .then(response => response.json())
+                            .then(details => {
+                                // Display the killmail details in your SPA
+                                const killmailElement = document.createElement('div');
+                                killmailElement.textContent = JSON.stringify(details);
+                                killmailsContainer.appendChild(killmailElement);
+                            })
+                            .catch(error => {
+                                // Handle any errors
+                                console.error('Error:', error);
+                            });
+                        });
+                    })
+                    .catch(error => {
+                        // Handle any errors
+                        console.error('Error:', error);
+                    });
+                })
+                .catch(error => {
+                    // Handle any errors
+                    console.error('Error:', error);
+                });
+            }
         }
 
-function displayKillmails(killmails) {
-    const killmailsContainer = document.getElementById('killmailsContainer');
-    killmailsContainer.innerHTML = '';
+        // Initial fetch and display
+        fetchAndDisplayKillmails();
 
-    if (Array.isArray(killmails)) {
-        for (const killmail of killmails) {
-            const killmailElement = document.createElement('div');
-            killmailElement.textContent = JSON.stringify(killmail);
-            killmailsContainer.appendChild(killmailElement);
-        }
-    } else {
-        const killmailElement = document.createElement('div');
-        killmailElement.textContent = JSON.stringify(killmails);
-        killmailsContainer.appendChild(killmailElement);
-    }
-}
+        // Refresh killmails every 60 seconds
+        setInterval(() => {
+            fetchAndDisplayKillmails();
+            let countdown = 60;
+            const countdownElement = document.getElementById('countdown-timer');
+            countdownElement.textContent = `Refreshing in ${countdown} seconds...`;
 
-        // Check if access token is available in the URL parameters
-        const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get('code');
+            const countdownInterval = setInterval(() => {
+                countdown--;
+                countdownElement.textContent = `Refreshing in ${countdown} seconds...`;
 
-        // If access token is available, make the fetch request to get the access token
-        if (code) {
-            fetch('https://login.eveonline.com/v2/oauth/token', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'Authorization': 'Basic ' + btoa('8becdadbea7d46adabbcf20af467fac8:YL1hieqstuYMwZ3p3WWTncxBdVTgck3PUrIyPzK4')
-                },
-                body: 'grant_type=authorization_code&code=' + code
-            })
-            .then(response => response.json())
-            .then(data => {
-                const accessToken = data.access_token;
-                fetchKillmails(accessToken);
-
-                // Set up interval to fetch killmails every minute
-                setInterval(() => {
-                    fetchKillmails(accessToken);
-                }, 60000); // 60000 milliseconds = 1 minute
-            })
-            .catch(error => {
-                // Handle any errors
-                console.error('Error:', error);
-            });
-        }
+                if (countdown === 0) {
+                    clearInterval(countdownInterval);
+                }
+            }, 1000);
+        }, 60000);
     </script>
 </body>
 </html>
+
 
