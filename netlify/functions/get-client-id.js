@@ -1,4 +1,3 @@
-
 // get-client-id.js
 exports.handler = async function(event, context) {
     return {
