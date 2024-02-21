@@ -1,14 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>EVE Online SPA 10</title>
+    <title>EVE Online SPA</title>
 </head>
 <body>
     <h1>EVE Online SPA</h1>
     <p>Welcome to your EVE Online single-page application!</p>
     <button id="login-button">Log in with EVE Online</button>
-
-    <div id="killmails-container"></div>
+    <div id="killmailsContainer"></div>
 
     <script>
         function generateState() {
@@ -25,6 +24,34 @@
             // Redirect the user to the EVE SSO login page
             window.location.href = 'https://login.eveonline.com/v2/oauth/authorize/?response_type=code&redirect_uri=https%3A%2F%2Ffriendly-puppy-d4bfa8.netlify.app%2Fcallback&client_id=8becdadbea7d46adabbcf20af467fac8&scope=esi-killmails.read_killmails.v1&state=' + state;
         });
+
+        function fetchKillmails(accessToken) {
+            fetch('https://esi.evetech.net/v1/characters/2117504100/killmails/recent/', {
+                headers: {
+                    Authorization: 'Bearer ' + accessToken,
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Process the data (killmails) and display them in your SPA
+                displayKillmails(data);
+            })
+            .catch(error => {
+                // Handle any errors
+                console.error('Error:', error);
+            });
+        }
+
+        function displayKillmails(killmails) {
+            const killmailsContainer = document.getElementById('killmailsContainer');
+            killmailsContainer.innerHTML = '';
+
+            for (const killmail of killmails) {
+                const killmailElement = document.createElement('div');
+                killmailElement.textContent = JSON.stringify(killmail);
+                killmailsContainer.appendChild(killmailElement);
+            }
+        }
 
         // Check if access token is available in the URL parameters
         const urlParams = new URLSearchParams(window.location.search);
@@ -43,38 +70,12 @@
             .then(response => response.json())
             .then(data => {
                 const accessToken = data.access_token;
-                fetch('https://esi.evetech.net/v1/characters/2117504100/killmails/recent/', {
-                    headers: {
-                        Authorization: 'Bearer ' + accessToken,
-                    },
-                })
-                .then(response => response.json())
-                .then(data => {
-                    // Process the data (killmails)
-                    const killmails = data.reverse().slice(0, 10); // Get the last 10 killmails and reverse the order
-                    const killmailsContainer = document.getElementById('killmails-container');
-                    killmailsContainer.innerHTML = '';
+                fetchKillmails(accessToken);
 
-                    // Fetch details for each killmail
-                    killmails.forEach(killmail => {
-                        fetch(`https://esi.evetech.net/v1/killmails/${killmail.killmail_id}/${killmail.killmail_hash}/`)
-                        .then(response => response.json())
-                        .then(details => {
-                            // Display the killmail details in your SPA
-                            const killmailElement = document.createElement('div');
-                            killmailElement.textContent = JSON.stringify(details);
-                            killmailsContainer.appendChild(killmailElement);
-                        })
-                        .catch(error => {
-                            // Handle any errors
-                            console.error('Error:', error);
-                        });
-                    });
-                })
-                .catch(error => {
-                    // Handle any errors
-                    console.error('Error:', error);
-                });
+                // Set up interval to fetch killmails every minute
+                setInterval(() => {
+                    fetchKillmails(accessToken);
+                }, 60000); // 60000 milliseconds = 1 minute
             })
             .catch(error => {
                 // Handle any errors
@@ -84,3 +85,4 @@
     </script>
 </body>
 </html>
+
