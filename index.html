@@ -72,7 +72,6 @@ async function handleAuthResponse() {
 
 
 async function fetchKillmails(accessToken) {
-    console.log('Fetching killmails for character ID:', sss);
     try {
         const response = await fetch(`https://esi.evetech.net/latest/characters/2117504100/killmails/recent/?datasource=tranquility&page=1`, {
             headers: {
