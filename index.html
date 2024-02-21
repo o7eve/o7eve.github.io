@@ -60,11 +60,11 @@ async function handleAuthResponse() {
                 body: JSON.stringify({ code })
             });
             const data = await response.json();
-            if (data.character_id) {
-                fetchKillmails(data.accessToken, data.character_id);
-            } else {
-                console.error('Character ID not found in the response');
-            }
+            // if (data.character_id) {
+            //    fetchKillmails(data.accessToken, data.character_id);
+            //} else {
+            //    console.error('Character ID not found in the response');
+           // }
         } catch (error) {
             console.error('Error:', error);
         }
