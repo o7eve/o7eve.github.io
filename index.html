@@ -22,6 +22,7 @@
 
     <script>
         async function fetchClientId() {
+             console.log('Fetching Client ID');
             try {
                 const response = await fetch('https://friendly-puppy-d4bfa8.netlify.app/.netlify/functions/get-client-id');
                 const data = await response.json();
@@ -49,6 +50,8 @@ document.getElementById('login').addEventListener('click', async function() {
 });
         
 async function handleAuthResponse() {
+    const storedState = sessionStorage.getItem('oauthState');
+    console.log('Stored State:', storedState); // Log the stored state
     const params = new URLSearchParams(window.location.search);
     const code = params.get('code');
     const returnedState = params.get('state');
