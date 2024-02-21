@@ -33,37 +33,31 @@
         }
 
 document.getElementById('login').addEventListener('click', async function() {
+    const state = Math.random().toString(36).substring(2);
+    console.log('Setting State:', state); // Log the state value being set
+    sessionStorage.setItem('oauthState', state);
+
     const clientId = await fetchClientId();
     if (!clientId) {
         alert('Error fetching client details. Please try again later.');
         return;
     }
 
-    const state = Math.random().toString(36).substring(2);
-    setTimeout(() => {
-    console.log('Setting Stored State:', state); // Log the state value being set
-    console.log('Before setting Stored State:', sessionStorage.getItem('oauthState'));
-    }, 1000); // 3000 milliseconds (1 second) delay
-    sessionStorage.setItem('oauthState', state);
-        setTimeout(() => {
-    console.log('After setting Stored State:', sessionStorage.getItem('oauthState'));
-                }, 3000); // 1000 milliseconds (1 second) delay
     const redirectUri = encodeURIComponent('https://friendly-puppy-d4bfa8.netlify.app/callback');
     const scope = encodeURIComponent('esi-killmails.read_killmails.v1');
     window.location.href = `https://login.eveonline.com/v2/oauth/authorize?response_type=code&redirect_uri=${redirectUri}&client_id=${clientId}&scope=${scope}&state=${state}`;
 });
+
         
 async function handleAuthResponse() {
     const params = new URLSearchParams(window.location.search);
     const code = params.get('code');
     const returnedState = params.get('state');
-    
-    console.log('Code:', code);
+    const storedState = sessionStorage.getItem('oauthState');
+    console.log('Returned State:', returnedState);
+    console.log('Stored State:', storedState); // Log the stored state
 
-    const storedStateBefore = sessionStorage.getItem('oauthState');
-    console.log('Stored State Before:', storedStateBefore);
-
-    if (code && returnedState === storedStateBefore) {
+    if (code && returnedState === storedState) {
         const state = Math.random().toString(36).substring(2);
         console.log('Setting Stored State:', state);
         sessionStorage.setItem('oauthState', state);
@@ -78,16 +72,16 @@ async function handleAuthResponse() {
             console.log('Access Token:', data.accessToken);
             // Use the hardcoded character ID for testing
             fetchKillmails(data.accessToken, '2117504100');
-        } catch (error) {
+ } catch (error) {
             console.error('Error:', error);
         }
+    } else {
+        console.error('State mismatch or missing code');
     }
 
     const storedStateAfter = sessionStorage.getItem('oauthState');
     console.log('Stored State After:', storedStateAfter);
 }
-
-
 
 async function fetchKillmails(accessToken) {
     console.log('Using Access Token:', accessToken);
