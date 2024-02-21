@@ -70,12 +70,14 @@ async function handleAuthResponse() {
     console.log('Returned State:', returnedState);
 
     if (!code || !returnedState) {
-        console.error('Missing code or stategrr');
+        console.error('Missing code or state333');
         return;
     }
 
     if (storedState !== returnedState) {
         console.error('State mismatch');
+        console.log('Stored State:', storedState);
+        console.log('Returned State:', returnedState);
         return;
     }
 
