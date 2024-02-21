@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>EVE Online DDD SPA</title>
+    <title>EVE Online DsssDD SPA</title>
     <style>
         body {
             background-color: black;
@@ -85,46 +85,49 @@
             characterInfoContainer.innerHTML = `Character Name: ${characterName}, Character ID: ${characterId}`;
         }
 
-        function fetchAndDisplayKillmails() {
-            fetch(`https://esi.evetech.net/v1/characters/${characterId}/killmails/recent/`, {
-                headers: {
-                    Authorization: 'Bearer ' + accessToken,
-                },
-            })
+      function fetchAndDisplayKillmails() {
+    fetch(`https://esi.evetech.net/v1/characters/${characterId}/killmails/recent/`, {
+        headers: {
+            Authorization: 'Bearer ' + accessToken,
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        const filteredKillmails = data.filter(killmail => {
+            return killmail.attackers.some(attacker => attacker.character_id === characterId);
+        });
+
+        const killmailsContainer = document.getElementById('killmails-container');
+        killmailsContainer.innerHTML = '';
+
+        filteredKillmails.forEach(killmail => {
+            fetch(`https://esi.evetech.net/v1/killmails/${killmail.killmail_id}/${killmail.killmail_hash}/`)
             .then(response => response.json())
-            .then(data => {
-                const killmails = data.sort((a, b) => new Date(b.killmail_time) - new Date(a.killmail_time)).slice(0, 10); // Sort by timestamp and get the top 10
-                const killmailsContainer = document.getElementById('killmails-container');
-                killmailsContainer.innerHTML = '';
+            .then(details => {
+                // Process the killmail details here
+                // For each killmail, calculate the kill value, get the ship icon, and display it
+                // Example:
+                const shipTypeId = details.victim.ship_type_id;
+                const killValue = calculateKillValue(details);
+                const shipIconUrl = `https://images.evetech.net/types/${shipTypeId}/icon`;
 
-                killmails.forEach(killmail => {
-                    fetch(`https://esi.evetech.net/v1/killmails/${killmail.killmail_id}/${killmail.killmail_hash}/`)
-                    .then(response => response.json())
-                    .then(details => {
-                        // Process the killmail details here
-                        // For each killmail, calculate the kill value, get the ship icon, and display it
-                        // Example:
-                        const shipTypeId = details.victim.ship_type_id;
-                        const killValue = calculateKillValue(details);
-                        const shipIconUrl = `https://images.evetech.net/types/${shipTypeId}/icon`;
-
-                        const killmailElement = document.createElement('div');
-                        killmailElement.className = 'kill';
-                        killmailElement.innerHTML = `
-                            <img src="${shipIconUrl}" alt="Ship Icon">
-                            <span>${formatValue(killValue)}</span>
-                        `;
-                        killmailsContainer.appendChild(killmailElement);
-                    })
-                    .catch(error => {
-                        console.error('Error fetching killmail details:', error);
-                    });
-                });
+                const killmailElement = document.createElement('div');
+                killmailElement.className = 'kill';
+                killmailElement.innerHTML = `
+                    <img src="${shipIconUrl}" alt="Ship Icon">
+                    <span>${formatValue(killValue)}</span>
+                `;
+                killmailsContainer.appendChild(killmailElement);
             })
             .catch(error => {
-                console.error('Error fetching recent killmails:', error);
+                console.error('Error fetching killmail details:', error);
             });
-        }
+        });
+    })
+    .catch(error => {
+        console.error('Error fetching recent killmails:', error);
+    });
+}
 
         function calculateKillValue(killmail) {
             // Implement the kill value calculation here
