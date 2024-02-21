@@ -1,6 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EVE Online SSO SPA</title>
     <style>
         .kill {
@@ -19,10 +21,29 @@
     <div id="killsContainer"></div>
 
     <script>
-       document.getElementById('login').addEventListener('click', function() {
+        async function fetchClientId() {
+            try {
+                const response = await fetch('/.netlify/functions/get-client-id');
+                const { clientId } = await response.json();
+                return clientId;
+            } catch (error) {
+                console.error('Error fetching client ID:', error);
+                return null;
+            }
+        }
+
+        document.getElementById('login').addEventListener('click', async function() {
+            const clientId = await fetchClientId();
+            if (!clientId) {
+                alert('Error fetching client details. Please try again later.');
+                return;
+            }
+
             const state = Math.random().toString(36).substring(2);
             sessionStorage.setItem('oauthState', state);
-            window.location.href = `https://login.eveonline.com/v2/oauth/authorize?response_type=code&redirect_uri=https://friendly-puppy-d4bfa8.netlify.app/callback&client_id=8becdadbea7d46adabbcf20af467fac8&=scope=esi-killmails.read_killmails.v1&state=${state}`;
+            const redirectUri = encodeURIComponent('https://friendly-puppy-d4bfa8.netlify.app/callback');
+            const scope = encodeURIComponent('esi-killmails.read_killmails.v1');
+            window.location.href = `https://login.eveonline.com/v2/oauth/authorize?response_type=code&redirect_uri=${redirectUri}&client_id=${clientId}&scope=${scope}&state=${state}`;
         });
 
         async function handleAuthResponse() {
@@ -47,7 +68,7 @@
         }
 
         async function fetchKillmails(accessToken) {
-            // Your existing fetchKillmails logic
+            // Your existing fetchKillmails logic here
         }
 
         document.addEventListener('DOMContentLoaded', handleAuthResponse);
