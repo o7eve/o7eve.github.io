@@ -8,6 +8,8 @@
     <p>Welcome to your EVE Online single-page application!</p>
     <button id="login-button">Log in with EVE Online</button>
 
+    <div id="killmails-container"></div>
+
     <script>
         function generateState() {
             var state = '';
@@ -48,8 +50,26 @@
                 })
                 .then(response => response.json())
                 .then(data => {
-                    // Process the data (killmails) and display them in your SPA
-                    console.log(data);
+                    // Process the data (killmails)
+                    const killmails = data.reverse().slice(0, 10); // Get the last 10 killmails and reverse the order
+                    const killmailsContainer = document.getElementById('killmails-container');
+                    killmailsContainer.innerHTML = '';
+
+                    // Fetch details for each killmail
+                    killmails.forEach(killmail => {
+                        fetch(`https://esi.evetech.net/v1/killmails/${killmail.killmail_id}/${killmail.killmail_hash}/`)
+                        .then(response => response.json())
+                        .then(details => {
+                            // Display the killmail details in your SPA
+                            const killmailElement = document.createElement('div');
+                            killmailElement.textContent = JSON.stringify(details);
+                            killmailsContainer.appendChild(killmailElement);
+                        })
+                        .catch(error => {
+                            // Handle any errors
+                            console.error('Error:', error);
+                        });
+                    });
                 })
                 .catch(error => {
                     // Handle any errors
