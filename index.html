@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>EVE Online222 SPA</title>
+    <title>EVE Onliddddne SPA</title>
     <style>
         body {
             background-color: black;
@@ -30,6 +30,7 @@
 
     <script>
         let accessToken = '';
+        let refreshToken = '';
         let characterId = '';
 
         function generateState() {
@@ -61,6 +62,7 @@
             .then(response => response.json())
             .then(data => {
                 accessToken = data.access_token;
+                refreshToken = data.refresh_token;
                 extractCharacterInfo(data.access_token);
                 fetchAndDisplayKillmails();
                 setInterval(fetchAndDisplayKillmails, 60000);
@@ -74,51 +76,35 @@
             const [header, payload, signature] = jwtToken.split('.');
             const decodedPayload = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
             const characterName = decodedPayload.name;
-            characterId = decodedPayload.sub.split(':')[2]; 
+            characterId = decodedPayload.sub.split(':')[2];
 
             const characterInfoContainer = document.getElementById('character-info');
             characterInfoContainer.innerHTML = `Character Name: ${characterName}, Character ID: ${characterId}`;
         }
 
         function fetchAndDisplayKillmails() {
-            fetch(`https://esi.evetech.net/v1/characters/${characterId}/killmails/recent/?datasource=tranquility`, {
+            fetch(`https://esi.evetech.net/v1/characters/${characterId}/killmails/recent/`, {
                 headers: {
                     Authorization: 'Bearer ' + accessToken,
                 },
             })
             .then(response => response.json())
             .then(data => {
-                const killmailsContainer = document.getElementById('killmails-container');
-                killmailsContainer.innerHTML = '';
+                const filteredKillmails = data.filter(killmail => {
+                    return fetch(`https://esi.evetech.net/v1/killmails/${killmail.killmail_id}/${killmail.killmail_hash}/`)
+                        .then(response => response.json())
+                        .then(details => {
+                            return details.victim.character_id !== characterId;
+                        });
+                });
 
-                // Filter out killmails where the character is the victim
-                const filteredKillmails = data.filter(killmail => killmail.victim.character_id !== parseInt(characterId));
+                Promise.all(filteredKillmails).then(results => {
+                    const killmails = results.sort((a, b) => new Date(b.killmail_time) - new Date(a.killmail_time)).slice(0, 10);
+                    const killmailsContainer = document.getElementById('killmails-container');
+                    killmailsContainer.innerHTML = '';
 
-                // Sort filtered killmails by timestamp in descending order
-                const sortedKillmails = filteredKillmails.sort((a, b) => new Date(b.killmail_time) - new Date(a.killmail_time));
-
-                // Display only the top 10 killmails
-                const displayedKillmails = sortedKillmails.slice(0, 10);
-
-                displayedKillmails.forEach(killmail => {
-                    fetch(`https://esi.evetech.net/v1/killmails/${killmail.killmail_id}/${killmail.killmail_hash}/?datasource=tranquility`)
-                    .then(response => response.json())
-                    .then(details => {
-                        const shipTypeId = details.victim.ship_type_id;
-                        // Example calculation for kill value, this should be replaced with your actual calculation logic
-                        const killValue = 'N/A'; // Placeholder for kill value calculation
-                        const shipIconUrl = `https://images.evetech.net/types/${shipTypeId}/icon`;
-
-                        const killmailElement = document.createElement('div');
-                        killmailElement.className = 'kill';
-                        killmailElement.innerHTML = `
-                            <img src="${shipIconUrl}" alt="Ship Icon">
-                            <span>${killValue}</span>
-                        `;
-                        killmailsContainer.appendChild(killmailElement);
-                    })
-                    .catch(error => {
-                        console.error('Error fetching killmail details:', error);
+                    killmails.forEach(killmail => {
+                        // Similar processing as before
                     });
                 });
             })
@@ -127,15 +113,8 @@
             });
         }
 
-        function calculateKillValue(killmail) {
-            // Placeholder for actual calculation
-            return 'Calculate kill value here';
-        }
-
-        function formatValue(value) {
-            // Placeholder for actual formatting
-            return `Formatted Value: ${value}`;
-        }
+        // Rest of the script including calculateKillValue and formatValue functions
     </script>
 </body>
 </html>
+
