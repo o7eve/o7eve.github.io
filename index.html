@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>EV5555567Online SPA</title>
+    <title>EV0000067Online SPA</title>
     <style>
         body {
             background-color: black;
@@ -51,7 +51,7 @@
         }
 
         // Function to fetch and display recent killmails
-function fetchAndDisplayKillmails() {
+        function fetchAndDisplayKillmails() {
     fetch(`https://esi.evetech.net/v1/characters/${characterId}/killmails/recent/`, {
         headers: {
             Authorization: 'Bearer ' + accessToken,
@@ -67,8 +67,12 @@ function fetchAndDisplayKillmails() {
                 });
         });
 
-        Promise.all(filteredKillmails).then(results => {
-            const killmails = results.sort((a, b) => new Date(b.killmail_time) - new Date(a.killmail_time)).slice(0, 10);
+        Promise.allSettled(filteredKillmails).then(results => {
+            const validKillmails = results
+                .filter(result => result.status === 'fulfilled')
+                .map(result => result.value);
+
+            const killmails = validKillmails.sort((a, b) => new Date(b.killmail_time) - new Date(a.killmail_time)).slice(0, 10);
             const killmailsContainer = document.getElementById('killmails-container');
             killmailsContainer.innerHTML = '';
 
@@ -92,7 +96,6 @@ function fetchAndDisplayKillmails() {
         console.error('Error fetching recent killmails:', error);
     });
 }
-
 
         // Implement your kill value calculation logic here
         function calculateKillValue(killmail) {
