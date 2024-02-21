@@ -40,10 +40,14 @@ document.getElementById('login').addEventListener('click', async function() {
     }
 
     const state = Math.random().toString(36).substring(2);
+    setTimeout(() => {
     console.log('Setting Stored State:', state); // Log the state value being set
     console.log('Before setting Stored State:', sessionStorage.getItem('oauthState'));
+    }, 1000); // 3000 milliseconds (1 second) delay
     sessionStorage.setItem('oauthState', state);
+        setTimeout(() => {
     console.log('After setting Stored State:', sessionStorage.getItem('oauthState'));
+                }, 3000); // 1000 milliseconds (1 second) delay
     const redirectUri = encodeURIComponent('https://friendly-puppy-d4bfa8.netlify.app/callback');
     const scope = encodeURIComponent('esi-killmails.read_killmails.v1');
     window.location.href = `https://login.eveonline.com/v2/oauth/authorize?response_type=code&redirect_uri=${redirectUri}&client_id=${clientId}&scope=${scope}&state=${state}`;
