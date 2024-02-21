@@ -26,19 +26,35 @@
 
         // Check if access token is available in the URL parameters
         const urlParams = new URLSearchParams(window.location.search);
-        const accessToken = urlParams.get('access_token');
+        const code = urlParams.get('code');
 
-        // If access token is available, make the fetch request
-        if (accessToken) {
-            fetch('https://esi.evetech.net/v1/characters/2117504100/killmails/recent/', {
+        // If access token is available, make the fetch request to get the access token
+        if (code) {
+            fetch('https://login.eveonline.com/v2/oauth/token', {
+                method: 'POST',
                 headers: {
-                    Authorization: 'Bearer ' + accessToken,
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Authorization': 'Basic ' + btoa('8becdadbea7d46adabbcf20af467fac8:YL1hieqstuYMwZ3p3WWTncxBdVTgck3PUrIyPzK4')
                 },
+                body: 'grant_type=authorization_code&code=' + code
             })
             .then(response => response.json())
             .then(data => {
-                // Process the data (killmails) and display them in your SPA
-                console.log(data);
+                const accessToken = data.access_token;
+                fetch('https://esi.evetech.net/v1/characters/2117504100/killmails/recent/', {
+                    headers: {
+                        Authorization: 'Bearer ' + accessToken,
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Process the data (killmails) and display them in your SPA
+                    console.log(data);
+                })
+                .catch(error => {
+                    // Handle any errors
+                    console.error('Error:', error);
+                });
             })
             .catch(error => {
                 // Handle any errors
