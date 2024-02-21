@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>EVE Online 999SPA</title>
+    <title>EVE Online 99sss9SPA</title>
     <style>
         body {
             background-color: black;
@@ -79,7 +79,7 @@ function fetchAndDisplayKillmails() {
     })
     .then(response => response.json())
     .then(data => {
-        const killmails = data.sort((a, b) => b.killmail_time.localeCompare(a.killmail_time)).slice(0, 10); // Sort by timestamp and get the top 10
+        const killmails = data.sort((a, b) => new Date(b.killmail_time) - new Date(a.killmail_time)).slice(0, 10); // Sort by timestamp and get the top 10
         const killmailsContainer = document.getElementById('killmails-container');
         killmailsContainer.innerHTML = '';
 
