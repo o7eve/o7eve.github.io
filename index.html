@@ -87,7 +87,7 @@
             })
             .then(response => response.json())
             .then(data => {
-                const killmails = data.sort((a, b) => new Date(b.killmail_time) - new Date(a.killmail_time)).slice(0, 10); // Sort by timestamp and get the top 10
+                const killmails = data.sort((a, b) => b.killmail_id - a.killmail_id).slice(0, 10); // Sort by killmail_id and get the top 10
                 const iconsContainer = document.getElementById('icons');
                 iconsContainer.innerHTML = '';
 
