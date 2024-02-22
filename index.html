@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>KILLFEED SPA</title>
+    <title>KILLFEED SPA TOOL</title>
     <style>
         body {
             background-color: black;
@@ -46,6 +46,7 @@
 <body>
     <div id="icons"></div>
     <button id="login-button">Log in with EVE Online</button>
+    <button id="logout-button" style="display: none;">Log Out</button>
 
     <div id="character-info"></div>
     <h2 id="heading">  KILLFEED SPA</h2>
@@ -208,10 +209,16 @@
                 .then(response => response.json());
         }
     // Function to update the countdown
-    function startCountdown() {
+function startCountdown(showCountdown = true) {
     let counter = 60;
     const refreshCounter = document.getElementById('refresh-counter');
-    refreshCounter.textContent = counter;
+
+    if (showCountdown) {
+        refreshCounter.textContent = counter;
+    } else {
+        refreshCounter.textContent = "XX";
+        return; // Exit the function if we're not showing the countdown
+    }
 
     const countdownInterval = setInterval(() => {
         counter--;
@@ -219,7 +226,11 @@
 
         if (counter <= 0) {
             clearInterval(countdownInterval);
-            startCountdown(); // Restart the countdown
+            if (localStorage.getItem('ACCESS_TOKEN')) {
+                startCountdown(true); // Restart the countdown only if the user is logged in
+            } else {
+                startCountdown(false); // Show "XX" if the user is logged out
+            }
         }
     }, 1000);
 }
@@ -239,6 +250,24 @@ function fetchAndDisplayKillmails() {
         startCountdown(); // Reset the countdown
     }
 }
+
+    // Implements the logout process
+function logout() {
+    // Clear stored tokens and user data
+    localStorage.removeItem('ACCESS_TOKEN');
+    localStorage.removeItem('REFRESH_TOKEN');
+    localStorage.removeItem('ACCESS_TOKEN_EXPIRY');
+    characterId = '';
+
+    // Update UI
+    document.getElementById('character-info').textContent = '';
+    document.getElementById('icons').innerHTML = '';
+    document.getElementById('login-button').style.display = 'block';
+    document.getElementById('logout-button').style.display = 'none';
+
+    // Show "XX" for the refresh counter
+    startCountdown(false);
+}   
         // Main script
         var state = generateState();
         fetchCredentials()
@@ -260,27 +289,35 @@ function fetchAndDisplayKillmails() {
                         body: 'grant_type=authorization_code&code=' + code
                     })
                     .then(response => response.json())
-                    .then(data => {
-                        accessToken = data.access_token;
-                        refreshToken = data.refresh_token;
-                        localStorage.setItem('ACCESS_TOKEN', accessToken);
-                        localStorage.setItem('REFRESH_TOKEN', refreshToken);
-                        // Store the expiry time
-                        const expiryTime = Math.floor(Date.now() / 1000) + data.expires_in;
-                        localStorage.setItem('ACCESS_TOKEN_EXPIRY', expiryTime.toString());
-                        extractCharacterInfo(data.access_token);
-                        fetchMarketPrices();
-                        fetchAndDisplayKillmails();
-                        setInterval(fetchAndDisplayKillmails, 60000);
-                    })
+                     .then(data => {
+                     accessToken = data.access_token;
+                    refreshToken = data.refresh_token;
+                    localStorage.setItem('ACCESS_TOKEN', accessToken);
+                    localStorage.setItem('REFRESH_TOKEN', refreshToken);
+                    // Store the expiry time
+                    const expiryTime = Math.floor(Date.now() / 1000) + data.expires_in;
+                    localStorage.setItem('ACCESS_TOKEN_EXPIRY', expiryTime.toString());
+                    extractCharacterInfo(data.access_token);
+                    fetchMarketPrices();
+                    fetchAndDisplayKillmails();
+                    setInterval(fetchAndDisplayKillmails, 60000);
+
+                    // After successful login, update the button visibility
+                    document.getElementById('login-button').style.display = 'none';
+                    document.getElementById('logout-button').style.display = 'block';
+                
+                    // Start the countdown with the actual seconds
+                    startCountdown(true);
+                })
                     .catch(error => {
-                        console.error('Error getting access token:', error);
-                    });
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching credentials:', error);
-            });
+    console.error('Error getting access token:', error);
+});
+// Start the countdown with "XX" if the user is not logged in
+if (!localStorage.getItem('ACCESS_TOKEN')) {
+    startCountdown(false);
+} else {
+    startCountdown(true);
+}
     </script>
 </body>
 </html>
