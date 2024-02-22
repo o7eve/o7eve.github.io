@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>KILLFEED SPA TOOL</title>
+    <title>KILLFEED SPA</title>
     <style>
         body {
             background-color: black;
@@ -49,13 +49,13 @@
     <button id="logout-button" style="display: none;">Log Out</button>
 
     <div id="character-info"></div>
-    <h2 id="heading">  KILLFEED SPA</h2>
+    <h2 id="heading">KILLFEED SPA</h2>
     <p>  This tool displays your 10 most recent kills.</p>
     <p>  Login via the EVE SSO.</p>
     <p>  Kills will refresh in <span id="refresh-counter">60</span> seconds.</p>
-    <p>  Go here for more instructions:  https://o7eve.github.io/README.md </p>
+    <p>  Go here for more instructions: https://o7eve.github.io/README.md</p>
     <p>  My in-game name is: William Friedman</p>
-    <p>  o7 </p>
+    <p>  o7</p>
     
     <script>
         // Function to generate a random state for OAuth
@@ -268,7 +268,7 @@ function logout() {
     // Show "XX" for the refresh counter
     startCountdown(false);
 }   
-        // Main script
+ // Main script
         var state = generateState();
         fetchCredentials()
             .then(credentials => {
@@ -289,35 +289,41 @@ function logout() {
                         body: 'grant_type=authorization_code&code=' + code
                     })
                     .then(response => response.json())
-                     .then(data => {
-                     accessToken = data.access_token;
-                    refreshToken = data.refresh_token;
-                    localStorage.setItem('ACCESS_TOKEN', accessToken);
-                    localStorage.setItem('REFRESH_TOKEN', refreshToken);
-                    // Store the expiry time
-                    const expiryTime = Math.floor(Date.now() / 1000) + data.expires_in;
-                    localStorage.setItem('ACCESS_TOKEN_EXPIRY', expiryTime.toString());
-                    extractCharacterInfo(data.access_token);
-                    fetchMarketPrices();
-                    fetchAndDisplayKillmails();
-                    setInterval(fetchAndDisplayKillmails, 60000);
+                    .then(data => {
+                        accessToken = data.access_token;
+                        refreshToken = data.refresh_token;
+                        localStorage.setItem('ACCESS_TOKEN', accessToken);
+                        localStorage.setItem('REFRESH_TOKEN', refreshToken);
+                        // Store the expiry time
+                        const expiryTime = Math.floor(Date.now() / 1000) + data.expires_in;
+                        localStorage.setItem('ACCESS_TOKEN_EXPIRY', expiryTime.toString());
+                        extractCharacterInfo(data.access_token);
+                        fetchMarketPrices();
+                        fetchAndDisplayKillmails();
+                        setInterval(fetchAndDisplayKillmails, 60000);
 
-                    // After successful login, update the button visibility
-                    document.getElementById('login-button').style.display = 'none';
-                    document.getElementById('logout-button').style.display = 'block';
-                
-                    // Start the countdown with the actual seconds
-                    startCountdown(true);
-                })
+                        // After successful login, update the button visibility
+                        document.getElementById('login-button').style.display = 'none';
+                        document.getElementById('logout-button').style.display = 'block';
+
+                        // Start the countdown with the actual seconds
+                        startCountdown(true);
+                    })
                     .catch(error => {
-    console.error('Error getting access token:', error);
-});
-// Start the countdown with "XX" if the user is not logged in
-if (!localStorage.getItem('ACCESS_TOKEN')) {
-    startCountdown(false);
-} else {
-    startCountdown(true);
-}
+                        console.error('Error getting access token:', error);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching credentials:', error);
+            });
+
+        // Start the countdown with "XX" if the user is not logged in
+        if (!localStorage.getItem('ACCESS_TOKEN')) {
+            startCountdown(false);
+        } else {
+            startCountdown(true);
+        }
     </script>
 </body>
 </html>
