@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>KILLFEED SP333Ass44 sss198</title>
+    <title>KILLFEED dd SP333Ass44 sss198</title>
     <style>
         body {
             background-color: black;
@@ -68,15 +68,15 @@
         }
 
         // Function to extract character information from the JWT token
-        function extractCharacterInfo(jwtToken) {
-            const [header, payload, signature] = jwtToken.split('.');
-            const decodedPayload = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
-            const characterName = decodedPayload.name;
-            characterId = decodedPayload.sub.split(':')[2];
+function extractCharacterInfo(jwtToken) {
+    const [header, payload, signature] = jwtToken.split('.');
+    const decodedPayload = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+    const characterName = decodedPayload.name;
+    characterId = parseInt(decodedPayload.sub.split(':')[2], 10);
 
-            const characterInfoContainer = document.getElementById('character-info');
-            characterInfoContainer.innerHTML = `Character Name: ${characterName}, Character ID: ${characterId}`;
-        }
+    const characterInfoContainer = document.getElementById('character-info');
+    characterInfoContainer.innerHTML = `Character Name: ${characterName}, Character ID: ${characterId}`;
+}
 
         // Function to fetch and display recent killmails
         function fetchAndDisplayKillmails() {
@@ -94,7 +94,7 @@
 
                 Promise.all(killmailDetailsPromises)
                 .then(killmailDetails => {
-                    const filteredKillmails = killmailDetails.filter(details => details.victim.character_id !== characterId);
+                    const filteredKillmails = killmailDetails.filter(details => parseInt(details.victim.character_id, 10) !== characterId);
                     const sortedKillmails = filteredKillmails.sort((a, b) => new Date(b.killmail_time) - new Date(a.killmail_time)).slice(0, 10);
                     const iconsContainer = document.getElementById('icons');
                     iconsContainer.innerHTML = '';
