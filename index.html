@@ -48,13 +48,13 @@
     <button id="login-button">Log in with EVE Online</button>
 
     <div id="character-info"></div>
-    <h2 id="heading">KILLFEED SPA</h2>
-    <p>This tool displays your 10 most recent kills.</p>
-    <p>Login via the EVE SSO.</p>
-    <p>It will refresh every 60 seconds.</p>
-    <p>Go here for more instructions:  https://o7eve.github.io/README.md </p>
-    <p>My in-game name is: William Friedman</p>
-    <p>o7 </p>
+    <h2 id="heading">  KILLFEED SPA</h2>
+    <p>  This tool displays your 10 most recent kills.</p>
+    <p>  Login via the EVE SSO.</p>
+    <p>  It will refresh every 60 seconds.</p>
+    <p>  Go here for more instructions:  https://o7eve.github.io/README.md </p>
+    <p>  My in-game name is: William Friedman</p>
+    <p>  o7 </p>
     
     <script>
         // Function to generate a random state for OAuth
@@ -143,7 +143,7 @@
             } else if (value >= 1000000) {
                 return (value / 1000000).toFixed(1) + 'M';
             } else {
-                return value.toFixed(2);
+                return (value / 1000).toFixed(1) + 'K');
             }
         }
 
