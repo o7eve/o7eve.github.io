@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>KILLFEED SPA TEST</title>
+    <title>KILLFEED SPA TEST2</title>
     <style>
         body {
             background-color: black;
@@ -122,23 +122,26 @@
             });
         }
 
-        // Function to start the countdown timer
-        function startCountdown() {
-            let counter = 60;
-            const refreshCounter = document.getElementById('refresh-counter');
-            refreshCounter.textContent = counter;
+// Function to start the countdown timer
+function startCountdown() {
+    let counter = 60;
+    const refreshCounter = document.getElementById('refresh-counter');
+    refreshCounter.textContent = counter;
 
-            const countdownInterval = setInterval(() => {
-                counter--;
-                refreshCounter.textContent = counter;
+    // Clear existing interval
+    clearInterval(window.countdownInterval);
 
-                if (counter <= 0) {
-                    clearInterval(countdownInterval);
-                    fetchAndDisplayKillmails();
-                    startCountdown(); // Restart the countdown
-                }
-            }, 1000);
+    window.countdownInterval = setInterval(() => {
+        counter--;
+        refreshCounter.textContent = counter;
+
+        if (counter <= 0) {
+            clearInterval(window.countdownInterval);
+            fetchAndDisplayKillmails(); // Fetch new data
+            startCountdown(); // Restart the countdown
         }
+    }, 1000);
+}
 
         // Function to fetch and display recent killmails
         function fetchAndDisplayKillmails() {
@@ -256,7 +259,7 @@
             document.getElementById('refresh-counter').innerText = '60';
         }
 
-       // Main script
+      // Main script
 var state = generateState();
 fetchCredentials()
     .then(credentials => {
@@ -302,8 +305,8 @@ fetchCredentials()
                 extractCharacterInfo(data.access_token);
                 fetchMarketPrices();
                 fetchAndDisplayKillmails();
-                setInterval(fetchAndDisplayKillmails, 60000);
                 startCountdown(); // Start the countdown timer
+                window.countdownInterval = setInterval(startCountdown, 60000); // Set interval for countdown
                 updateLoginButton(); // Update the login button text after logging in
             })
             .catch(error => {
