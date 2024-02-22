@@ -1,4 +1,4 @@
-https://github.com/o7eve/o7eve.github.io/blob/main/index.html
+https://o7eve.github.io
 
 KILLFEED SPA (Single Page Application)
 
