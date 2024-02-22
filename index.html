@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>EVddd7Online SPA</title>
+    <title>EVerfd E Online SPA</title>
     <style>
         body {
             background-color: black;
@@ -51,57 +51,85 @@
         }
 
         // Function to fetch and display recent killmails
-function fetchAndDisplayKillmails() {
-    fetch(`https://esi.evetech.net/v1/characters/${characterId}/killmails/recent/`, {
-        headers: {
-            Authorization: 'Bearer ' + accessToken,
-        },
-    })
-    .then(response => response.json())
-    .then(data => {
-        const killmails = data.sort((a, b) => new Date(b.killmail_time) - new Date(a.killmail_time)).slice(0, 10); // Sort by timestamp and get the top 10
-        const killmailsContainer = document.getElementById('killmails-container');
-        killmailsContainer.innerHTML = '';
-
-        killmails.forEach(killmail => {
-            fetch(`https://esi.evetech.net/v1/killmails/${killmail.killmail_id}/${killmail.killmail_hash}/`)
+        function fetchAndDisplayKillmails() {
+            fetch(`https://esi.evetech.net/v1/characters/${characterId}/killmails/recent/`, {
+                headers: {
+                    Authorization: 'Bearer ' + accessToken,
+                },
+            })
             .then(response => response.json())
-            .then(details => {
-                if (details.victim.character_id === characterId) {
-                    return; // Skip killmail if the character is the victim
-                }
+            .then(data => {
+                const killmails = data.sort((a, b) => new Date(b.killmail_time) - new Date(a.killmail_time)).slice(0, 10); // Sort by timestamp and get the top 10
+                const killmailsContainer = document.getElementById('killmails-container');
+                killmailsContainer.innerHTML = '';
 
-                const shipTypeId = details.victim.ship_type_id;
-                const shipIconUrl = `https://images.evetech.net/types/${shipTypeId}/icon`;
+                killmails.forEach(killmail => {
+                    fetch(`https://esi.evetech.net/v1/killmails/${killmail.killmail_id}/${killmail.killmail_hash}/`)
+                    .then(response => response.json())
+                    .then(details => {
+                        if (details.victim.character_id === characterId) {
+                            return; // Skip killmail if the character is the victim
+                        }
 
-                const killmailElement = document.createElement('div');
-                killmailElement.className = 'kill';
-                killmailElement.innerHTML = `
-                    <img src="${shipIconUrl}" alt="Ship Icon">
-                    <span>Value: ${calculateKillValue(details)}</span>
-                `;
-                killmailsContainer.appendChild(killmailElement);
+                        const shipTypeId = details.victim.ship_type_id;
+                        const shipIconUrl = `https://images.evetech.net/types/${shipTypeId}/icon`;
+
+                        const killmailElement = document.createElement('div');
+                        killmailElement.className = 'kill';
+                        killmailElement.innerHTML = `
+                            <img src="${shipIconUrl}" alt="Ship Icon">
+                            <span>Value: ${calculateKillValue(details)}</span>
+                        `;
+                        killmailsContainer.appendChild(killmailElement);
+                    })
+                    .catch(error => {
+                        console.error('Error fetching killmail details:', error);
+                    });
+                });
             })
             .catch(error => {
-                console.error('Error fetching killmail details:', error);
+                console.error('Error fetching recent killmails:', error);
             });
-        });
-    })
-    .catch(error => {
-        console.error('Error fetching recent killmails:', error);
-    });
-}
+        }
 
-
-        // Implement your kill value calculation logic here
+        // Function to calculate the value of a killmail
         function calculateKillValue(killmail) {
-            return 'To be implemented'; // Placeholder return value
+            let totalValue = 0;
+
+            const shipPrice = marketPrices.find(p => p.type_id === killmail.victim.ship_type_id)?.average_price || 0;
+            totalValue += shipPrice;
+
+            for (const item of killmail.victim.items) {
+                const itemPrice = marketPrices.find(p => p.type_id === item.item_type_id)?.average_price || 0;
+                totalValue += itemPrice * (item.quantity_dropped || 0);
+                totalValue += itemPrice * (item.quantity_destroyed || 0);
+            }
+
+            return formatValue(totalValue);
+        }
+
+        // Function to format the value
+        function formatValue(value) {
+            if (value >= 1000000000) {
+                return (value / 1000000000).toFixed(1) + 'B';
+            } else if (value >= 1000000) {
+                return (value / 1000000).toFixed(1) + 'M';
+            } else {
+                return value.toFixed(2);
+            }
+        }
+
+        // Function to fetch market prices
+        async function fetchMarketPrices() {
+            const response = await fetch('https://esi.evetech.net/latest/markets/prices/');
+            marketPrices = await response.json();
         }
 
         // Initializing variables
         let accessToken = '';
         let refreshToken = '';
         let characterId = '';
+        let marketPrices = [];
 
         // Main script
         var state = generateState();
@@ -136,4 +164,3 @@ function fetchAndDisplayKillmails() {
     </script>
 </body>
 </html>
-
