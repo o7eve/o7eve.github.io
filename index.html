@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>KILLFEED SPA t8</title>
+    <title>KILLFEED SPA t98</title>
     <style>
         body {
             background-color: black;
@@ -159,10 +159,18 @@
         let characterId = '';
         let marketPrices = [];
 
-        // Main script
-        var state = generateState();
+// Function to fetch the client ID and secret from the Netlify Function
+function fetchCredentials() {
+    return fetch('/.netlify/functions/getCredentials')
+        .then(response => response.json());
+}
+
+// Main script
+var state = generateState();
+fetchCredentials()
+    .then(credentials => {
         document.getElementById('login-button').addEventListener('click', function() {
-            window.location.href = 'https://login.eveonline.com/v2/oauth/authorize/?response_type=code&redirect_uri=' + window.location.origin + '/callback&client_id=' + process.env.EVE_CLIENT_ID + '&scope=esi-killmails.read_killmails.v1&state=' + state;
+            window.location.href = 'https://login.eveonline.com/v2/oauth/authorize/?response_type=code&redirect_uri=' + window.location.origin + '/callback&client_id=' + credentials.clientId + '&scope=esi-killmails.read_killmails.v1&state=' + state;
         });
 
         const urlParams = new URLSearchParams(window.location.search);
@@ -173,7 +181,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
-                    'Authorization': 'Basic ' + btoa(process.env.EVE_CLIENT_ID + ':' + process.env.EVE_CLIENT_SECRET)
+                    'Authorization': 'Basic ' + btoa(credentials.clientId + ':' + credentials.clientSecret)
                 },
                 body: 'grant_type=authorization_code&code=' + code
             })
@@ -192,6 +200,10 @@
                 console.error('Error getting access token:', error);
             });
         }
+    })
+    .catch(error => {
+        console.error('Error fetching credentials:', error);
+    });
     </script>
 </body>
 </html>
