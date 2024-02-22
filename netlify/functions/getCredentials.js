@@ -4,6 +4,7 @@ exports.handler = async (event, context) => {
         headers: {
             'Access-Control-Allow-Origin': 'https://o7eve.github.io',
             'Access-Control-Allow-Headers': 'Content-Type',
+            'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
         },
         body: JSON.stringify({
             clientId: process.env.EVE_CLIENT_ID,
