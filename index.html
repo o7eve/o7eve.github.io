@@ -1,6 +1,7 @@
+<!DOCTYPE html>
 <html>
 <head>
-    <title>KILLFEED SPA t3</title>
+    <title>KILLFEED SPA t4</title>
     <style>
         body {
             background-color: black;
@@ -153,47 +154,44 @@
         }
 
         // Initializing variables
-    let accessToken = sessionStorage.getItem('ACCESS_TOKEN');
-    let refreshToken = sessionStorage.getItem('REFRESH_TOKEN');
-    let characterId = '';
-    let marketPrices = [];
-
+        let accessToken = localStorage.getItem('ACCESS_TOKEN');
+        let refreshToken = localStorage.getItem('REFRESH_TOKEN');
+        let characterId = '';
+        let marketPrices = [];
 
         // Main script
-var state = generateState();
-document.getElementById('login-button').addEventListener('click', function() {
-    window.location.href = 'https://login.eveonline.com/v2/oauth/authorize/?response_type=code&redirect_uri=' + window.location.origin + '/callback&client_id=' + process.env.EVE_CLIENT_ID + '&scope=esi-killmails.read_killmails.v1&state=' + state;
-});
+        var state = generateState();
+        document.getElementById('login-button').addEventListener('click', function() {
+            window.location.href = 'https://login.eveonline.com/v2/oauth/authorize/?response_type=code&redirect_uri=' + window.location.origin + '/callback&client_id=' + process.env.EVE_CLIENT_ID + '&scope=esi-killmails.read_killmails.v1&state=' + state;
+        });
 
-const urlParams = new URLSearchParams(window.location.search);
-const code = urlParams.get('code');
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
 
-if (code) {
-    fetch('https://login.eveonline.com/v2/oauth/token', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Authorization': 'Basic ' + btoa(process.env.EVE_CLIENT_ID + ':' + process.env.EVE_CLIENT_SECRET)
-        },
-        body: 'grant_type=authorization_code&code=' + code
-    })
-    .then(response => response.json())
-    .then(data => {
-        accessToken = data.access_token;
-        refreshToken = data.refresh_token;
-        sessionStorage.setItem('ACCESS_TOKEN', accessToken);
-        sessionStorage.setItem('REFRESH_TOKEN', refreshToken);
-        extractCharacterInfo(data.access_token);
-        fetchMarketPrices();
-        fetchAndDisplayKillmails();
-        setInterval(fetchAndDisplayKillmails, 60000);
-    })
-    .catch(error => {
-        console.error('Error getting access token:', error);
-    });
-}
+        if (code) {
+            fetch('https://login.eveonline.com/v2/oauth/token', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Authorization': 'Basic ' + btoa(process.env.EVE_CLIENT_ID + ':' + process.env.EVE_CLIENT_SECRET)
+                },
+                body: 'grant_type=authorization_code&code=' + code
+            })
+            .then(response => response.json())
+            .then(data => {
+                accessToken = data.access_token;
+                refreshToken = data.refresh_token;
+                localStorage.setItem('ACCESS_TOKEN', accessToken);
+                localStorage.setItem('REFRESH_TOKEN', refreshToken);
+                extractCharacterInfo(data.access_token);
+                fetchMarketPrices();
+                fetchAndDisplayKillmails();
+                setInterval(fetchAndDisplayKillmails, 60000);
+            })
+            .catch(error => {
+                console.error('Error getting access token:', error);
+            });
+        }
     </script>
 </body>
 </html>
-
-
