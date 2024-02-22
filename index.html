@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>KILLFEED SPAss44 sss198</title>
+    <title>KILLFEED SP333Ass44 sss198</title>
     <style>
         body {
             background-color: black;
@@ -86,19 +86,20 @@
                 },
             })
             .then(response => response.json())
-            .then(data => {
-                const killmails = data.sort((a, b) => b.killmail_id - a.killmail_id).slice(0, 10); // Sort by killmail_id and get the top 10
-                const iconsContainer = document.getElementById('icons');
-                iconsContainer.innerHTML = '';
-
-                killmails.forEach(killmail => {
+            .then(killmails => {
+                const killmailDetailsPromises = killmails.map(killmail =>
                     fetch(`https://esi.evetech.net/v1/killmails/${killmail.killmail_id}/${killmail.killmail_hash}/`)
                     .then(response => response.json())
-                    .then(details => {
-                        if (details.victim.character_id === characterId) {
-                            return; // Skip killmail if the character is the victim
-                        }
+                );
 
+                Promise.all(killmailDetailsPromises)
+                .then(killmailDetails => {
+                    const filteredKillmails = killmailDetails.filter(details => details.victim.character_id !== characterId);
+                    const sortedKillmails = filteredKillmails.sort((a, b) => new Date(b.killmail_time) - new Date(a.killmail_time)).slice(0, 10);
+                    const iconsContainer = document.getElementById('icons');
+                    iconsContainer.innerHTML = '';
+
+                    sortedKillmails.forEach(details => {
                         const shipTypeId = details.victim.ship_type_id;
                         const shipIconUrl = `https://images.evetech.net/types/${shipTypeId}/icon`;
 
@@ -109,10 +110,10 @@
                             <span>${calculateKillValue(details)}</span>
                         `;
                         iconsContainer.appendChild(killmailElement);
-                    })
-                    .catch(error => {
-                        console.error('Error fetching killmail details:', error);
                     });
+                })
+                .catch(error => {
+                    console.error('Error fetching killmail details:', error);
                 });
             })
             .catch(error => {
@@ -159,51 +160,51 @@
         let characterId = '';
         let marketPrices = [];
 
-// Function to fetch the client ID and secret from the Netlify Function
-function fetchCredentials() {
-    return fetch('https://friendly-puppy-d4bfa8.netlify.app/.netlify/functions/getCredentials')
-        .then(response => response.json());
-}
+        // Function to fetch the client ID and secret from the Netlify Function
+        function fetchCredentials() {
+            return fetch('https://friendly-puppy-d4bfa8.netlify.app/.netlify/functions/getCredentials')
+                .then(response => response.json());
+        }
 
-// Main script
-var state = generateState();
-fetchCredentials()
-    .then(credentials => {
-        document.getElementById('login-button').addEventListener('click', function() {
-            window.location.href = 'https://login.eveonline.com/v2/oauth/authorize/?response_type=code&redirect_uri=' + encodeURIComponent('https://friendly-puppy-d4bfa8.netlify.app/callback') + '&client_id=' + credentials.clientId + '&scope=esi-killmails.read_killmails.v1&state=' + state;
-        });
+        // Main script
+        var state = generateState();
+        fetchCredentials()
+            .then(credentials => {
+                document.getElementById('login-button').addEventListener('click', function() {
+                    window.location.href = 'https://login.eveonline.com/v2/oauth/authorize/?response_type=code&redirect_uri=' + encodeURIComponent('https://friendly-puppy-d4bfa8.netlify.app/callback') + '&client_id=' + credentials.clientId + '&scope=esi-killmails.read_killmails.v1&state=' + state;
+                });
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get('code');
+                const urlParams = new URLSearchParams(window.location.search);
+                const code = urlParams.get('code');
 
-        if (code) {
-            fetch('https://login.eveonline.com/v2/oauth/token', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'Authorization': 'Basic ' + btoa(credentials.clientId + ':' + credentials.clientSecret)
-                },
-                body: 'grant_type=authorization_code&code=' + code
-            })
-            .then(response => response.json())
-            .then(data => {
-                accessToken = data.access_token;
-                refreshToken = data.refresh_token;
-                localStorage.setItem('ACCESS_TOKEN', accessToken);
-                localStorage.setItem('REFRESH_TOKEN', refreshToken);
-                extractCharacterInfo(data.access_token);
-                fetchMarketPrices();
-                fetchAndDisplayKillmails();
-                setInterval(fetchAndDisplayKillmails, 60000);
+                if (code) {
+                    fetch('https://login.eveonline.com/v2/oauth/token', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'Authorization': 'Basic ' + btoa(credentials.clientId + ':' + credentials.clientSecret)
+                        },
+                        body: 'grant_type=authorization_code&code=' + code
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        accessToken = data.access_token;
+                        refreshToken = data.refresh_token;
+                        localStorage.setItem('ACCESS_TOKEN', accessToken);
+                        localStorage.setItem('REFRESH_TOKEN', refreshToken);
+                        extractCharacterInfo(data.access_token);
+                        fetchMarketPrices();
+                        fetchAndDisplayKillmails();
+                        setInterval(fetchAndDisplayKillmails, 60000);
+                    })
+                    .catch(error => {
+                        console.error('Error getting access token:', error);
+                    });
+                }
             })
             .catch(error => {
-                console.error('Error getting access token:', error);
+                console.error('Error fetching credentials:', error);
             });
-        }
-    })
-    .catch(error => {
-        console.error('Error fetching credentials:', error);
-    });
     </script>
 </body>
 </html>
