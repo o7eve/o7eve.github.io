@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>KILLFEED SPA t98</title>
+    <title>KILLFEED SPA t198</title>
     <style>
         body {
             background-color: black;
@@ -161,7 +161,7 @@
 
 // Function to fetch the client ID and secret from the Netlify Function
 function fetchCredentials() {
-    return fetch('/.netlify/functions/getCredentials')
+    return fetch('https://friendly-puppy-d4bfa8.netlify.app/.netlify/functions/getCredentials')
         .then(response => response.json());
 }
 
@@ -204,6 +204,7 @@ fetchCredentials()
     .catch(error => {
         console.error('Error fetching credentials:', error);
     });
+    }
     </script>
 </body>
 </html>
