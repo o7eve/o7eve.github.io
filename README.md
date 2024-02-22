@@ -3,11 +3,17 @@ https://o7eve.github.io
 KILLFEED SPA (Single Page Application)
 
 This is a web app that allows will automatically display the ship icons for your last 10 kills.
+
 It will also display the value.
+
 It refreshes every 60 seconds.
+
 What I use this for is while streaming eve online via OBS on twitch of kick. 
+
 You login to the page via the eve online single-sign on feature.
+
 The application then takes your character id and pulls the recent killmails from eve's api server.
+
 Note that if you dont have recent kills it might not display anything.   Not sure of the timeframe but it is a while (weeks I think).
 
 Tips for setting this up with OBS: 
