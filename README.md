@@ -21,7 +21,7 @@ Tips for setting this up with OBS:
 
 5) Right-click on the KILLFEED SPA browser source again and select the "interact" menu item.  A window will open in obs that renders the web page that you can interact with.  Initially, there will be no kill icons. Click the login button and it will redirect you to the eve online sso authentication page.  Authenticate, select your character, and your kills should appear.
 
-6) To properly display the kill icons and values on your stream, you will need to CROP OUT THE SUBMISSION BLOCK.  
+6) To properly display the kill icons and values on your stream, you will need to crop out the junk.
 
 To do this, reposition the kill display in your OBS stream preview window, I put mine up at the top of the screen.  To hide the browser text and login button from displaying on your screen you need to crop it out of the display.  You can do this by right clicking on the KILLFEED SPA browser source, select "Transform", then select "Edit Transform"  This will bring up a menu that will allow you to adjust position and crop.  Near the bottom where it says "Crop", enter 400 px in the "Bottom" field,  and 80 in the "Top" filed.  This will chop the top and bottom portions of the browser source from appearing on your stream screen.  You may need to use a greater or lesser number so you can adjust it to what suits you.
 
