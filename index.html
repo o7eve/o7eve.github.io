@@ -48,7 +48,7 @@
     <button id="login-button">Log in with EVE Online</button>
 
     <div id="character-info"></div>
-    <h2 id="heading">KILLFEED SPA (v1.1)</h2>
+    <h2 id="heading">KILLFEED SPA (v1.2)</h2>
     <p>  You login via the EVE SSO and page displays the ship icon and value of your 10 most recent kills.</p>
     <p>  Kills will refresh in <span id="refresh-counter">60</span> seconds.</p>
     
@@ -127,7 +127,7 @@ function resetState() {
             return currentTime >= expiryTime - bufferTime;
         }
 
-        // Function to refresh the access token using the refresh token
+ 
     // Function to refresh the access token using the refresh token
 function refreshAccessToken() {
     const refreshToken = localStorage.getItem('REFRESH_TOKEN');
@@ -272,11 +272,13 @@ function startCountdown() {
 
         // Function to fetch the client ID and secret credentials from the Netlify Function and stor the credentials
 
+// Function to fetch the client ID and secret from the Netlify Function
 function fetchCredentials() {
     return fetch('https://friendly-puppy-d4bfa8.netlify.app/.netlify/functions/getCredentials')
         .then(response => response.json())
-        .then(data => {
-            credentials = data;
+        .then(credentials => {
+            console.log(credentials); // Add this line to check the credentials object
+            return credentials;
         });
 }
         
