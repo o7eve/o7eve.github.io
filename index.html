@@ -48,7 +48,7 @@
     <button id="login-button">Log in with EVE Online</button>
 
     <div id="character-info"></div>
-    <h2 id="heading">KILLFEED SPA (v1.0)</h2>
+    <h2 id="heading">KILLFEED SPA (v1.1)</h2>
     <p>  You login via the EVE SSO and page displays the ship icon and value of your 10 most recent kills.</p>
     <p>  Kills will refresh in <span id="refresh-counter">60</span> seconds.</p>
     
@@ -70,15 +70,15 @@
             return state;
         }    
         
-        // Function to update the login button text based on the login status
-        function updateLoginButton() {
-            const loginButton = document.getElementById('login-button');
-            if (accessToken) {
-                loginButton.textContent = 'Log Out';
-            } else {
-                loginButton.textContent = 'Log In with EVE Online';
-            }
-        }
+// Function to update the login button text based on the login status
+function updateLoginButton() {
+    const loginButton = document.getElementById('login-button');
+    if (accessToken) {
+        loginButton.textContent = 'Log Out';
+    } else {
+        loginButton.textContent = 'Log In with EVE Online';
+    }
+}
 
         // Function to handle logout
         function logout() {
@@ -100,12 +100,13 @@ function resetState() {
     localStorage.removeItem('REFRESH_TOKEN');
     localStorage.removeItem('ACCESS_TOKEN_EXPIRY');
     characterId = '';
-    clearInterval(window.countdownInterval); // Clear the countdown interval
+    clearInterval(window.countdownInterval);
     document.getElementById('login-button').innerText = 'Log in with EVE Online';
     document.getElementById('character-info').innerText = '';
     document.getElementById('icons').innerText = '';
     document.getElementById('refresh-counter').innerText = '60';
 }
+
 
         // Function to extract character information from the JWT token
         function extractCharacterInfo(jwtToken) {
@@ -278,7 +279,8 @@ function fetchCredentials() {
             credentials = data;
         });
 }
-       // Main script
+        
+// Main script
 var state = generateState();
 fetchCredentials()
     .then(credentials => {
@@ -295,38 +297,30 @@ fetchCredentials()
             }
         });
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get('code');
-
-        if (code) {
-            fetch('https://login.eveonline.com/v2/oauth/token', {
+        // Your new code starts here
+        // Make sure that the fetchCredentials function is being called successfully and that the credentials object is being set properly before it's used in the refreshAccessToken function
+        refreshAccessToken = () => {
+            const refreshToken = localStorage.getItem('REFRESH_TOKEN');
+            return fetch('https://login.eveonline.com/v2/oauth/token', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                     'Authorization': 'Basic ' + btoa(credentials.clientId + ':' + credentials.clientSecret)
                 },
-                body: 'grant_type=authorization_code&code=' + code
+                body: 'grant_type=refresh_token&refresh_token=' + refreshToken
             })
             .then(response => response.json())
             .then(data => {
                 accessToken = data.access_token;
-                refreshToken = data.refresh_token;
                 localStorage.setItem('ACCESS_TOKEN', accessToken);
-                localStorage.setItem('REFRESH_TOKEN', refreshToken);
-                // Store the expiry time
+                // Update the expiry time
                 const expiryTime = Math.floor(Date.now() / 1000) + data.expires_in;
                 localStorage.setItem('ACCESS_TOKEN_EXPIRY', expiryTime.toString());
-                extractCharacterInfo(data.access_token);
-                fetchMarketPrices();
-                fetchAndDisplayKillmails();
-                startCountdown(); // Start the countdown timer
-                window.countdownInterval = setInterval(startCountdown, 60000); // Set interval for countdown
-                updateLoginButton(); // Update the login button text after logging in
             })
             .catch(error => {
-                console.error('Error getting access token:', error);
+                console.error('Error refreshing access token:', error);
             });
-        }
+        };
     })
     .catch(error => {
         console.error('Error fetching credentials:', error);
