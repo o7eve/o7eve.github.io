@@ -48,7 +48,7 @@
     <button id="login-button">Log in with EVE Online</button>
 
     <div id="character-info"></div>
-    <h2 id="heading">KILLFEED SPA (v1.2)</h2>
+    <h2 id="heading">KILLFEED SPA (v1.3)</h2>
     <p>  You login via the EVE SSO and page displays the ship icon and value of your 10 most recent kills.</p>
     <p>  Kills will refresh in <span id="refresh-counter">60</span> seconds.</p>
     
@@ -59,8 +59,7 @@
     <p>  o7</p>
     
     <script>
-
-            // Function to generate a random state for OAuth
+        // Function to generate a random state for OAuth
         function generateState() {
             var state = '';
             var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -69,16 +68,16 @@
             }
             return state;
         }    
-        
-// Function to update the login button text based on the login status
-function updateLoginButton() {
-    const loginButton = document.getElementById('login-button');
-    if (accessToken) {
-        loginButton.textContent = 'Log Out';
-    } else {
-        loginButton.textContent = 'Log In with EVE Online';
-    }
-}
+
+        // Function to update the login button text based on the login status
+        function updateLoginButton() {
+            const loginButton = document.getElementById('login-button');
+            if (accessToken) {
+                loginButton.textContent = 'Log Out';
+            } else {
+                loginButton.textContent = 'Log In with EVE Online';
+            }
+        }
 
         // Function to handle logout
         function logout() {
@@ -92,21 +91,20 @@ function updateLoginButton() {
             updateLoginButton(); // Update the login button text
         }
 
-// Function to reset the SPA state
-function resetState() {
-    accessToken = null;
-    refreshToken = null;
-    localStorage.removeItem('ACCESS_TOKEN');
-    localStorage.removeItem('REFRESH_TOKEN');
-    localStorage.removeItem('ACCESS_TOKEN_EXPIRY');
-    characterId = '';
-    clearInterval(window.countdownInterval);
-    document.getElementById('login-button').innerText = 'Log in with EVE Online';
-    document.getElementById('character-info').innerText = '';
-    document.getElementById('icons').innerText = '';
-    document.getElementById('refresh-counter').innerText = '60';
-}
-
+        // Function to reset the SPA state
+        function resetState() {
+            accessToken = null;
+            refreshToken = null;
+            localStorage.removeItem('ACCESS_TOKEN');
+            localStorage.removeItem('REFRESH_TOKEN');
+            localStorage.removeItem('ACCESS_TOKEN_EXPIRY');
+            characterId = '';
+            clearInterval(window.countdownInterval);
+            document.getElementById('login-button').innerText = 'Log in with EVE Online';
+            document.getElementById('character-info').innerText = '';
+            document.getElementById('icons').innerText = '';
+            document.getElementById('refresh-counter').innerText = '60';
+        }
 
         // Function to extract character information from the JWT token
         function extractCharacterInfo(jwtToken) {
@@ -127,52 +125,49 @@ function resetState() {
             return currentTime >= expiryTime - bufferTime;
         }
 
- 
-    // Function to refresh the access token using the refresh token
-function refreshAccessToken() {
-    const refreshToken = localStorage.getItem('REFRESH_TOKEN');
-    return fetch('https://login.eveonline.com/v2/oauth/token', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Authorization': 'Basic ' + btoa(credentials.clientId + ':' + credentials.clientSecret)
-        },
-        body: 'grant_type=refresh_token&refresh_token=' + refreshToken
-    })
-    .then(response => response.json())
-    .then(data => {
-        accessToken = data.access_token;
-        localStorage.setItem('ACCESS_TOKEN', accessToken);
-        // Update the expiry time
-        const expiryTime = Math.floor(Date.now() / 1000) + data.expires_in;
-        localStorage.setItem('ACCESS_TOKEN_EXPIRY', expiryTime.toString());
-    })
-    .catch(error => {
-        console.error('Error refreshing access token:', error);
-    });
-}
-
-// Function to start the countdown timer
-function startCountdown() {
-    let counter = 60;
-    const refreshCounter = document.getElementById('refresh-counter');
-    refreshCounter.textContent = counter;
-
-    // Clear existing interval
-    clearInterval(window.countdownInterval);
-
-    window.countdownInterval = setInterval(() => {
-        counter--;
-        refreshCounter.textContent = counter;
-
-        if (counter <= 0) {
-            fetchAndDisplayKillmails(); // Fetch new data
-            counter = 60; // Reset the counter
+        // Function to refresh the access token using the refresh token
+        function refreshAccessToken() {
+            const refreshToken = localStorage.getItem('REFRESH_TOKEN');
+            return fetch('https://login.eveonline.com/v2/oauth/token', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Authorization': 'Basic ' + btoa(credentials.clientId + ':' + credentials.clientSecret)
+                },
+                body: 'grant_type=refresh_token&refresh_token=' + refreshToken
+            })
+            .then(response => response.json())
+            .then(data => {
+                accessToken = data.access_token;
+                localStorage.setItem('ACCESS_TOKEN', accessToken);
+                // Update the expiry time
+                const expiryTime = Math.floor(Date.now() / 1000) + data.expires_in;
+                localStorage.setItem('ACCESS_TOKEN_EXPIRY', expiryTime.toString());
+            })
+            .catch(error => {
+                console.error('Error refreshing access token:', error);
+            });
         }
-    }, 1000);
-}
 
+        // Function to start the countdown timer
+        function startCountdown() {
+            let counter = 60;
+            const refreshCounter = document.getElementById('refresh-counter');
+            refreshCounter.textContent = counter;
 
+            // Clear existing interval
+            clearInterval(window.countdownInterval);
+
+            window.countdownInterval = setInterval(() => {
+                counter--;
+                refreshCounter.textContent = counter;
+
+                if (counter <= 0) {
+                    fetchAndDisplayKillmails(); // Fetch new data
+                    counter = 60; // Reset the counter
+                }
+            }, 1000);
+        }
 
         // Function to fetch and display recent killmails
         function fetchAndDisplayKillmails() {
@@ -270,63 +265,42 @@ function startCountdown() {
         let refreshInterval;
         let credentials;
 
-        // Function to fetch the client ID and secret credentials from the Netlify Function and stor the credentials
+        // Function to fetch the client ID and secret from the Netlify Function
+        function fetchCredentials() {
+            return fetch('https://friendly-puppy-d4bfa8.netlify.app/.netlify/functions/getCredentials')
+                .then(response => response.json())
+                .then(credentials => {
+                    console.log(credentials); // Add this line to check the credentials object
+                    return credentials;
+                });
+        }
 
-// Function to fetch the client ID and secret from the Netlify Function
-function fetchCredentials() {
-    return fetch('https://friendly-puppy-d4bfa8.netlify.app/.netlify/functions/getCredentials')
-        .then(response => response.json())
-        .then(credentials => {
-            console.log(credentials); // Add this line to check the credentials object
-            return credentials;
-        });
-}
-        
-// Main script
-var state = generateState();
-fetchCredentials()
-    .then(credentials => {
-        updateLoginButton(); // Update the login button text when the page loads
+        // Main script
+        var state = generateState();
+        fetchCredentials()
+            .then(credentials => {
+                updateLoginButton(); // Update the login button text when the page loads
+                this.credentials = credentials;
 
-        document.getElementById('login-button').addEventListener('click', function() {
-            if (accessToken) {
-                // Log out logic
-                resetState(); // Reset the state
-                updateLoginButton(); // Update the login button text after logging out
-            } else {
-                // Log in logic
-                window.location.href = 'https://login.eveonline.com/v2/oauth/authorize/?response_type=code&redirect_uri=' + encodeURIComponent('https://friendly-puppy-d4bfa8.netlify.app/callback') + '&client_id=' + credentials.clientId + '&scope=esi-killmails.read_killmails.v1&state=' + state;
-            }
-        });
+                document.getElementById('login-button').addEventListener('click', function() {
+                    if (accessToken) {
+                        // Log out logic
+                        resetState(); // Reset the state
+                        updateLoginButton(); // Update the login button text after logging out
+                    } else {
+                        // Log in logic
+                        window.location.href = 'https://login.eveonline.com/v2/oauth/authorize/?response_type=code&redirect_uri=' + encodeURIComponent('https://friendly-puppy-d4bfa8.netlify.app/callback') + '&client_id=' + credentials.clientId + '&scope=esi-killmails.read_killmails.v1&state=' + state;
+                    }
+                });
 
-        // Your new code starts here
-        // Make sure that the fetchCredentials function is being called successfully and that the credentials object is being set properly before it's used in the refreshAccessToken function
-        refreshAccessToken = () => {
-            const refreshToken = localStorage.getItem('REFRESH_TOKEN');
-            return fetch('https://login.eveonline.com/v2/oauth/token', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'Authorization': 'Basic ' + btoa(credentials.clientId + ':' + credentials.clientSecret)
-                },
-                body: 'grant_type=refresh_token&refresh_token=' + refreshToken
-            })
-            .then(response => response.json())
-            .then(data => {
-                accessToken = data.access_token;
-                localStorage.setItem('ACCESS_TOKEN', accessToken);
-                // Update the expiry time
-                const expiryTime = Math.floor(Date.now() / 1000) + data.expires_in;
-                localStorage.setItem('ACCESS_TOKEN_EXPIRY', expiryTime.toString());
+                // Fetch market prices
+                fetchMarketPrices();
+                // Start countdown
+                startCountdown();
             })
             .catch(error => {
-                console.error('Error refreshing access token:', error);
+                console.error('Error fetching credentials:', error);
             });
-        };
-    })
-    .catch(error => {
-        console.error('Error fetching credentials:', error);
-    });
     </script>
 </body>
 </html>
