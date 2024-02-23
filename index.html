@@ -127,28 +127,29 @@ function resetState() {
         }
 
         // Function to refresh the access token using the refresh token
-        function refreshAccessToken() {
-            const refreshToken = localStorage.getItem('REFRESH_TOKEN');
-            return fetch('https://login.eveonline.com/v2/oauth/token', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'Authorization': 'Basic ' + btoa(credentials.clientId + ':' + credentials.clientSecret)
-                },
-                body: 'grant_type=refresh_token&refresh_token=' + refreshToken
-            })
-            .then(response => response.json())
-            .then(data => {
-                accessToken = data.access_token;
-                localStorage.setItem('ACCESS_TOKEN', accessToken);
-                // Update the expiry time
-                const expiryTime = Math.floor(Date.now() / 1000) + data.expires_in;
-                localStorage.setItem('ACCESS_TOKEN_EXPIRY', expiryTime.toString());
-            })
-            .catch(error => {
-                console.error('Error refreshing access token:', error);
-            });
-        }
+    // Function to refresh the access token using the refresh token
+function refreshAccessToken() {
+    const refreshToken = localStorage.getItem('REFRESH_TOKEN');
+    return fetch('https://login.eveonline.com/v2/oauth/token', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': 'Basic ' + btoa(credentials.clientId + ':' + credentials.clientSecret)
+        },
+        body: 'grant_type=refresh_token&refresh_token=' + refreshToken
+    })
+    .then(response => response.json())
+    .then(data => {
+        accessToken = data.access_token;
+        localStorage.setItem('ACCESS_TOKEN', accessToken);
+        // Update the expiry time
+        const expiryTime = Math.floor(Date.now() / 1000) + data.expires_in;
+        localStorage.setItem('ACCESS_TOKEN_EXPIRY', expiryTime.toString());
+    })
+    .catch(error => {
+        console.error('Error refreshing access token:', error);
+    });
+}
 
 // Function to start the countdown timer
 function startCountdown() {
@@ -266,13 +267,17 @@ function startCountdown() {
         let characterId = '';
         let marketPrices = [];
         let refreshInterval;
+        let credentials;
 
-        // Function to fetch the client ID and secret from the Netlify Function
-        function fetchCredentials() {
-            return fetch('https://friendly-puppy-d4bfa8.netlify.app/.netlify/functions/getCredentials')
-                .then(response => response.json());
-        }
+        // Function to fetch the client ID and secret credentials from the Netlify Function and stor the credentials
 
+function fetchCredentials() {
+    return fetch('https://friendly-puppy-d4bfa8.netlify.app/.netlify/functions/getCredentials')
+        .then(response => response.json())
+        .then(data => {
+            credentials = data;
+        });
+}
        // Main script
 var state = generateState();
 fetchCredentials()
