@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>KILLFEED SPA TEST4</title>
+    <title>KILLFEED SPA TEST54</title>
     <style>
         body {
             background-color: black;
@@ -57,6 +57,17 @@
     <p>  o7</p>
     
     <script>
+
+            // Function to generate a random state for OAuth
+        function generateState() {
+            var state = '';
+            var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            for (var i = 0; i < 16; i++) {
+                state += characters.charAt(Math.floor(Math.random() * characters.length));
+            }
+            return state;
+        }    
+        
         // Function to update the login button text based on the login status
         function updateLoginButton() {
             const loginButton = document.getElementById('login-button');
