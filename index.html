@@ -182,18 +182,34 @@
             }
         }
 
+        //proxy method
         function fetchKillmails() {
-            fetch(`https://esi.evetech.net/v1/characters/${characterId}/killmails/recent/`, {
-                headers: {
-                    Authorization: 'Bearer ' + accessToken,
-                },
-            })
-            .then(response => response.json())
-            .then(killmails => {
-                const killmailDetailsPromises = killmails.map(killmail =>
-                    fetch(`https://esi.evetech.net/v1/killmails/${killmail.killmail_id}/${killmail.killmail_hash}/`)
-                    .then(response => response.json())
-                );
+    // Assuming characterId and accessToken are available in your script's scope
+    fetch(`/api/fetch-killmails?characterId=${characterId}`, {
+        headers: {
+            'Authorization': `Bearer ${accessToken}`,
+        },
+    })
+    .then(response => response.json())
+    .then(killmails => {
+        // Your existing logic to process and display killmails goes here
+    })
+    .catch(error => {
+        console.error('Error fetching recent killmails:', error);
+    });
+}
+       // function fetchKillmails() {
+       //     fetch(`https://esi.evetech.net/v1/characters/${characterId}/killmails/recent/`, {
+       //         headers: {
+       //             Authorization: 'Bearer ' + accessToken,
+       //         },
+       //     })
+       //     .then(response => response.json())
+       //     .then(killmails => {
+        //        const killmailDetailsPromises = killmails.map(killmail =>
+        //            fetch(`https://esi.evetech.net/v1/killmails/${killmail.killmail_id}/${killmail.killmail_hash}/`)
+         //           .then(response => response.json())
+         //       );
 
                 Promise.all(killmailDetailsPromises)
                 .then(killmailDetails => {
