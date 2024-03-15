@@ -1,0 +1,13 @@
+{
+    "name": "eve-killmail-viewer",
+    "version": "1.0.0",
+    "description": "A SPA for displaying EVE Online killmails, with serverless functions hosted on Netlify.",
+    "main": "index.js",
+    "dependencies": {
+      "node-fetch": "^2.6.7"
+    },
+    "scripts": {},
+    "author": "",
+    "license": "ISC"
+  }
+  
