@@ -62,6 +62,13 @@ I hacked this together in an afternoon so it is what it is. :)  Fly drunk!  07
         .kill img {
             display: block;
             margin-bottom: 5px;
+            border: 2px solid #00FF00; /* Green border */
+            border-radius: 10px; /* Rounded corners */
+        }
+	.kill-value {
+    	    color: #FFFF00; /* Bright yellow */
+            font-size: 1.2em; /* Slightly larger font size */
+            font-weight: bold; /* Optional: makes the text bold */
         }
         #killmailLinks {
             display: block;
@@ -79,12 +86,7 @@ I hacked this together in an afternoon so it is what it is. :)  Fly drunk!  07
     <div id="killsContainer"></div>
     <textarea id="killmailLinks" placeholder="Paste External Kill Links here. Up to 10 max.  To find your external kill link, open a killmail in eve, click the three little dots in the upper right, and select Copy External Kill Link."></textarea>
     <button onclick="fetchKillmails()">Submit</button>
-    <div class="instructions">This tool is for the game Eve Online.</div>
-    <div class="instructions">You can paste external kill links from your killmails into the box, up to 10.</div>
-    <div class="instructions">It will display the ship icon and value.</div>
-    <div class="instructions">I created this tool to dispaly pvp kills on my OBS display when I am streaming Eve Online.</div>
-    <div class="instructions">Go to this&nbsp;<a style="color: #8ebf42;" href="https://github.com/o7eve/o7eve.github.io/blob/main/index.html">Github link for instructions and file download</a></div>
-    <div class="instructions">Fly Safe o7</div>
+    <div class="instructions">Paste external kill links in the box, up to 10. I create this tool to dispaly kills on my OBS display when streaming eve online.  <a href="https://github.com/o7eve/o7eve.github.io/blob/main/index.html" style="color: #8ebf42"> Github link for instructions and file download</a></div>
 
     <script>
         let marketPrices = {};
@@ -110,7 +112,7 @@ I hacked this together in an afternoon so it is what it is. :)  Fly drunk!  07
                 killElement.className = 'kill';
                 killElement.innerHTML = `
                     <img src="https://images.evetech.net/types/${shipTypeId}/icon" alt="Ship Icon">
-                    <span>${formatValue(killValue)}</span>
+                    <span class="kill-value">${formatValue(killValue)}</span>
                 `;
                 killsContainer.appendChild(killElement);
             }
@@ -147,4 +149,3 @@ I hacked this together in an afternoon so it is what it is. :)  Fly drunk!  07
     </script>
 </body>
 </html>
-
